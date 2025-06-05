@@ -209,6 +209,7 @@
       <input class="join-item btn btn-sm" type="radio" name="billing" aria-label="Bulanan" checked />
       <input class="join-item btn btn-sm" type="radio" name="billing" aria-label="Tahunan (hemat 20%)" />
     </div>
+    <p id="starter-price">Rp 49.000<span>/bulan</span></p>
   </div>
 
   <!-- Pricing Cards -->
@@ -418,6 +419,16 @@
   }
 }
 </script>
-
+<script>
+  document.querySelectorAll('input[name="billing"]').forEach(el => {
+    el.addEventListener('change', () => {
+      const bulanan = el.getAttribute('aria-label') === "Bulanan";
+      document.getElementById('starter-price').innerHTML = bulanan 
+        ? 'Rp 49.000<span>/bulan</span>' 
+        : 'Rp 490.000<span>/tahun</span>';
+      // ulang untuk semua paket
+    });
+  });
+</script>
   </body>
 </html>
