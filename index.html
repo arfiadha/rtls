@@ -194,81 +194,55 @@
 </section>
  
 
-<section class="py-16 bg-base-100 text-center" x-data="{ billing: 'monthly' }">
-  <h2 class="text-4xl font-bold mb-4">Pilih Paket Langganan</h2>
-  <p class="text-base-content/70 mb-6 max-w-xl mx-auto">
-    Nikmati akses penuh dengan fleksibilitas langganan bulanan atau tahunan.
-  </p>
+ <div class="grid md:grid-cols-3 gap-6 px-6 max-w-6xl mx-auto" x-data="{ billing: 'monthly' }">
 
-  <!-- Billing Toggle -->
-  <div class="flex justify-center mb-10">
-    <div class="join">
-      <input class="join-item btn btn-sm"
-        type="radio"
-        name="billing"
-        aria-label="Bulanan"
-        :class="{ 'btn-primary': billing === 'monthly' }"
-        @click="billing = 'monthly'"
-        checked
-      />
-      <input class="join-item btn btn-sm"
-        type="radio"
-        name="billing"
-        aria-label="Tahunan (hemat 10%)"
-        :class="{ 'btn-primary': billing === 'yearly' }"
-        @click="billing = 'yearly'"
-      />
+  <!-- Standar Plan -->
+  <div class="card bg-base-200 shadow-md border border-base-300">
+    <div class="card-body text-center">
+      <h3 class="text-lg font-bold">Standar</h3>
+      <p class="text-3xl font-bold text-success mt-2" x-text="billing === 'monthly' ? 'Rp 300.000' : 'Rp 3.240.000'"></p>
+      <span class="text-sm text-base-content/60" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
+      <ul class="mt-4 space-y-2 text-sm text-base-content/80">
+        <li>✔️ Akses modul dasar</li>
+        <li>✔️ Forum komunitas</li>
+        <li>✔️ Update mingguan</li>
+      </ul>
+      <button class="btn btn-success mt-6 w-full">Berlangganan</button>
     </div>
   </div>
 
-  <!-- Pricing Cards -->
-  <div class="grid md:grid-cols-3 gap-6 px-6 max-w-6xl mx-auto">
-    <!-- Standar Plan -->
-    <div class="card bg-base-200 shadow-md border border-base-300">
-      <div class="card-body text-center">
-        <h3 class="text-lg font-bold">Standar</h3>
-        <p class="text-3xl font-bold text-primary mt-2" x-text="billing === 'monthly' ? 'Rp 300.000' : 'Rp 3.240.000'"></p>
-        <span class="text-sm text-base-content/60" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
-        <ul class="mt-4 space-y-2 text-sm text-base-content/80">
-          <li>✔️ Akses modul dasar</li>
-          <li>✔️ Forum komunitas</li>
-          <li>✔️ Update mingguan</li>
-        </ul>
-        <button class="btn btn-primary mt-6 w-full">Berlangganan</button>
-      </div>
-    </div>
-
-    <!-- Standar+ Plan -->
-    <div class="card bg-primary text-primary-content shadow-xl border-2 border-primary scale-105">
-      <div class="card-body text-center">
-        <h3 class="text-lg font-bold">Standar +</h3>
-        <p class="text-3xl font-bold mt-2" x-text="billing === 'monthly' ? 'Rp 400.000' : 'Rp 4.320.000'"></p>
-        <span class="text-sm" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
-        <ul class="mt-4 space-y-2 text-sm">
-          <li>✔️ Semua fitur Standar</li>
-          <li>✔️ Materi premium & ebook</li>
-          <li>✔️ Sesi Q&A eksklusif</li>
-        </ul>
-        <button class="btn btn-accent mt-6 w-full text-primary">Langganan Growth</button>
-      </div>
-    </div>
-
-    <!-- Premium Plan -->
-    <div class="card bg-base-200 shadow-md border border-base-300">
-      <div class="card-body text-center">
-        <h3 class="text-lg font-bold">Premium</h3>
-        <p class="text-3xl font-bold text-primary mt-2" x-text="billing === 'monthly' ? 'Rp 600.000' : 'Rp 6.480.000'"></p>
-        <span class="text-sm text-base-content/60" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
-        <ul class="mt-4 space-y-2 text-sm text-base-content/80">
-          <li>✔️ Semua fitur Standar +</li>
-          <li>✔️ Akses hingga 5 user</li>
-          <li>✔️ Konsultasi pribadi</li>
-        </ul>
-        <button class="btn btn-primary mt-6 w-full">Hubungi Kami</button>
-      </div>
+  <!-- Standar+ Plan (Highlighted) -->
+  <div class="card bg-success text-success-content shadow-xl border-2 border-success scale-105 relative">
+    <div class="badge badge-warning absolute top-4 right-4">Paling Populer</div>
+    <div class="card-body text-center">
+      <h3 class="text-lg font-bold">Standar +</h3>
+      <p class="text-3xl font-bold mt-2" x-text="billing === 'monthly' ? 'Rp 400.000' : 'Rp 4.320.000'"></p>
+      <span class="text-sm" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
+      <ul class="mt-4 space-y-2 text-sm">
+        <li>✔️ Semua fitur Standar</li>
+        <li>✔️ Materi premium & ebook</li>
+        <li>✔️ Sesi Q&A eksklusif</li>
+      </ul>
+      <button class="btn bg-success-content text-success font-bold mt-6 w-full">Langganan Growth</button>
     </div>
   </div>
-</section>
+
+  <!-- Premium Plan -->
+  <div class="card bg-base-200 shadow-md border border-base-300">
+    <div class="card-body text-center">
+      <h3 class="text-lg font-bold">Premium</h3>
+      <p class="text-3xl font-bold text-success mt-2" x-text="billing === 'monthly' ? 'Rp 600.000' : 'Rp 6.480.000'"></p>
+      <span class="text-sm text-base-content/60" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
+      <ul class="mt-4 space-y-2 text-sm text-base-content/80">
+        <li>✔️ Semua fitur Standar +</li>
+        <li>✔️ Akses hingga 5 user</li>
+        <li>✔️ Konsultasi pribadi</li>
+      </ul>
+      <button class="btn btn-success mt-6 w-full">Hubungi Kami</button>
+    </div>
+  </div>
+</div>
+
 
 <section id="faq" class="bg-base-200 py-20 px-6">
   <div class="max-w-4xl mx-auto text-center">
