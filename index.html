@@ -214,7 +214,7 @@
       <input class="join-item btn btn-sm"
         type="radio"
         name="billing"
-        aria-label="Tahunan (hemat 20%)"
+        aria-label="Tahunan (hemat 10%)"
         :class="{ 'btn-primary': billing === 'yearly' }"
         @click="billing = 'yearly'"
       />
@@ -227,7 +227,7 @@
     <div class="card bg-base-200 shadow-md border border-base-300">
       <div class="card-body text-center">
         <h3 class="text-lg font-bold">Standar</h3>
-        <p class="text-3xl font-bold text-primary mt-2" x-text="billing === 'monthly' ? 'Rp 300.000' : 'Rp 2.880.000'"></p>
+        <p class="text-3xl font-bold text-primary mt-2" x-text="billing === 'monthly' ? 'Rp 300.000' : 'Rp 3.240.000'"></p>
         <span class="text-sm text-base-content/60" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
         <ul class="mt-4 space-y-2 text-sm text-base-content/80">
           <li>✔️ Akses modul dasar</li>
@@ -242,7 +242,7 @@
     <div class="card bg-primary text-primary-content shadow-xl border-2 border-primary scale-105">
       <div class="card-body text-center">
         <h3 class="text-lg font-bold">Standar +</h3>
-        <p class="text-3xl font-bold mt-2" x-text="billing === 'monthly' ? 'Rp 400.000' : 'Rp 3.840.000'"></p>
+        <p class="text-3xl font-bold mt-2" x-text="billing === 'monthly' ? 'Rp 400.000' : 'Rp 4.320.000'"></p>
         <span class="text-sm" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
         <ul class="mt-4 space-y-2 text-sm">
           <li>✔️ Semua fitur Standar</li>
@@ -257,7 +257,7 @@
     <div class="card bg-base-200 shadow-md border border-base-300">
       <div class="card-body text-center">
         <h3 class="text-lg font-bold">Premium</h3>
-        <p class="text-3xl font-bold text-primary mt-2" x-text="billing === 'monthly' ? 'Rp 600.000' : 'Rp 5.760.000'"></p>
+        <p class="text-3xl font-bold text-primary mt-2" x-text="billing === 'monthly' ? 'Rp 600.000' : 'Rp 6.480.000'"></p>
         <span class="text-sm text-base-content/60" x-text="billing === 'monthly' ? '/bulan' : '/tahun'"></span>
         <ul class="mt-4 space-y-2 text-sm text-base-content/80">
           <li>✔️ Semua fitur Standar +</li>
