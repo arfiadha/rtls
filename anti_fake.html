@@ -512,55 +512,73 @@
             return new Promise((resolve) => {
                 let devIndicators = [];
                 let devScore = 0;
+                let webLimitations = [];
 
-                // Test 1: Deteksi DevTools
-                if (isDevToolsOpen()) {
-                    devIndicators.push('Developer Tools terbuka');
-                    devScore += 40;
-                }
+                // KETERBATASAN: Web browser tidak bisa mendeteksi Android Developer Options secara langsung
+                webLimitations.push('Browser tidak dapat mengakses Android Developer Options');
 
-                // Test 2: Deteksi debugging
-                if (isDebuggerPresent()) {
-                    devIndicators.push('Debugger terdeteksi');
-                    devScore += 30;
-                }
-
-                // Test 3: Cek console tampering
-                if (isConsoleTampered()) {
-                    devIndicators.push('Console API dimodifikasi');
-                    devScore += 25;
-                }
-
-                // Test 4: Deteksi mobile developer mode indicators
-                if (isMobileDeveloperMode()) {
-                    devIndicators.push('Indikator developer mode mobile');
+                // Test 1: Deteksi DevTools (akurat untuk web)
+                const devToolsResult = detectDevTools();
+                if (devToolsResult.isOpen) {
+                    devIndicators.push(`Developer Tools: ${devToolsResult.method}`);
                     devScore += 35;
                 }
 
-                // Test 5: Browser extension indicators
-                if (hasSuspiciousExtensions()) {
-                    devIndicators.push('Extension mencurigakan terdeteksi');
+                // Test 2: Deteksi debugging environment
+                if (isDebuggingEnvironment()) {
+                    devIndicators.push('Environment debugging terdeteksi');
+                    devScore += 25;
+                }
+
+                // Test 3: Deteksi automation/testing tools
+                const automationResult = detectAutomationTools();
+                if (automationResult.detected) {
+                    devIndicators.push(`Automation tools: ${automationResult.tools.join(', ')}`);
+                    devScore += 40;
+                }
+
+                // Test 4: Deteksi emulator/virtual device (terbatas)
+                const emulatorResult = detectEmulatorSignature();
+                if (emulatorResult.suspected) {
+                    devIndicators.push(`Kemungkinan emulator: ${emulatorResult.reasons.join(', ')}`);
+                    devScore += 30;
+                }
+
+                // Test 5: Console/API manipulation check
+                if (isConsoleOrAPITampered()) {
+                    devIndicators.push('Browser API dimodifikasi');
                     devScore += 20;
                 }
 
-                let status = 'safe';
-                let message = 'Developer options tidak terdeteksi';
-                let details = 'Mode normal terdeteksi';
+                // Test 6: Performance timing anomalies (bisa indikasi debugging)
+                if (hasPerformanceAnomalies()) {
+                    devIndicators.push('Anomali performa terdeteksi');
+                    devScore += 15;
+                }
 
-                if (devScore >= 60) {
+                let status = 'warning'; // Default warning karena keterbatasan web
+                let message = 'Deteksi terbatas - gunakan aplikasi native untuk akurasi penuh';
+                let details = webLimitations.join(' | ');
+
+                if (devScore >= 50) {
                     status = 'danger';
-                    message = 'Developer options kemungkinan aktif';
+                    message = 'Development environment terdeteksi';
                     details = devIndicators.join(' | ');
-                } else if (devScore >= 30) {
+                } else if (devScore >= 20) {
                     status = 'warning';
-                    message = 'Beberapa indikator developer terdeteksi';
-                    details = devIndicators.length > 0 ? devIndicators.join(' | ') : 'Mode development mungkin aktif';
+                    message = 'Beberapa indikator development terdeteksi';
+                    details = devIndicators.length > 0 ? devIndicators.join(' | ') : 'Deteksi terbatas di web browser';
+                } else if (devIndicators.length === 0) {
+                    status = 'warning';
+                    message = 'Tidak dapat mendeteksi Android Developer Options';
+                    details = 'Web browser memiliki keterbatasan akses ke pengaturan sistem';
                 }
 
                 detectionResults.developer = {
                     status: status,
                     message: message,
-                    details: details + ` (Skor: ${devScore}%)`
+                    details: details + (devScore > 0 ? ` (Skor: ${devScore}%)` : ''),
+                    limitations: webLimitations
                 };
 
                 updateDetectionCard('dev', status, message, detectionResults.developer.details);
