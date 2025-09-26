@@ -507,7 +507,45 @@
                 }
             });
         }
+function detectDevTools() {
+    let devToolsOpen = false;
+    let method = 'Unknown';
 
+    try {
+        // Method 1: Checking for a specific size change that occurs when DevTools opens
+        const outerWidth = window.outerWidth;
+        const innerWidth = window.innerWidth;
+        if (outerWidth - innerWidth > 150) {
+            devToolsOpen = true;
+            method = 'Size difference';
+        }
+    } catch (e) {}
+
+    try {
+        // Method 2: Inspecting element.id or other properties
+        const element = new Image();
+        Object.defineProperty(element, 'id', {
+            get: () => {
+                devToolsOpen = true;
+                method = 'ID getter';
+            }
+        });
+        console.log(element);
+    } catch (e) {}
+
+    try {
+        // Method 3: Using a debugger statement
+        const before = Date.now();
+        debugger;
+        const after = Date.now();
+        if (after - before > 100) { // Paused by debugger
+            devToolsOpen = true;
+            method = 'Debugger timing';
+        }
+    } catch (e) {}
+
+    return { isOpen: devToolsOpen, method: method };
+}
         function detectDeveloperOptions() {
             return new Promise((resolve) => {
                 let devIndicators = [];
@@ -536,6 +574,74 @@
                     devIndicators.push(`Automation tools: ${automationResult.tools.join(', ')}`);
                     devScore += 40;
                 }
+function detectAutomationTools() {
+    const userAgent = navigator.userAgent;
+    const tools = [];
+    if (navigator.webdriver) {
+        tools.push('Webdriver');
+    }
+    if (userAgent.includes('HeadlessChrome')) {
+        tools.push('Headless Chrome');
+    }
+    if (userAgent.includes('PhantomJS')) {
+        tools.push('PhantomJS');
+    }
+    return { detected: tools.length > 0, tools: tools };
+}
+
+
+function detectEmulatorSignature() {
+    let reasons = [];
+    // Check for common emulator User-Agent strings
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes('Android') && !userAgent.includes('Mobile')) {
+        reasons.push('User-Agent is Android but not Mobile');
+    }
+    // Check for specific hardware/device-related properties
+    if (navigator.platform === 'Linux armv7l' && !navigator.hardwareConcurrency) {
+        reasons.push('Linux ARM without hardware concurrency');
+    }
+    return { suspected: reasons.length > 0, reasons: reasons };
+}
+function isConsoleOrAPITampered() {
+    return isConsoleTampered() || isGeolocationTampered();
+}
+
+function isConsoleTampered() {
+    try {
+        return typeof console.log !== 'function' ||
+               console.log.toString().indexOf('native code') === -1;
+    } catch (e) {
+        return true;
+    }
+}
+
+function hasPerformanceAnomalies() {
+    if (!performance || !performance.now) return false;
+    const t0 = performance.now();
+    for (let i = 0; i < 1e5; i++); // A busy loop
+    const t1 = performance.now();
+    return (t1 - t0) > 100; // Unusually long delay
+}
+
+function hasMixedContent() {
+  const scripts = document.querySelectorAll('script[src]');
+  const links = document.querySelectorAll('link[href]');
+  
+  for (let script of scripts) {
+    if (script.src && script.src.startsWith('http://')) return true;
+  }
+  for (let link of links) {
+    if (link.href && link.href.startsWith('http://')) return true;
+  }
+  return false;
+}
+
+function isBrowserIntegrityGood() {
+  return typeof window.navigator !== 'undefined' &&
+     typeof window.location !== 'undefined' &&
+     typeof window.document !== 'undefined';
+}
 
                 // Test 4: Deteksi emulator/virtual device (terbatas)
                 const emulatorResult = detectEmulatorSignature();
@@ -585,7 +691,33 @@
                 resolve();
             });
         }
+function isDebuggingEnvironment() {
+    return isDebuggerPresent();
+}
 
+function isDebuggerPresent() {
+    const originalError = Error;
+    let result = false;
+    Error = function() {
+        result = true;
+    };
+    try {
+        // Attempt to trigger an error in a controlled way
+        // If a debugger is attached, it might pause here
+        // and change the execution flow.
+        const start = Date.now();
+        debugger;
+        const end = Date.now();
+        if (end - start > 100) {
+            return true;
+        }
+    } catch(e) {
+        return false;
+    } finally {
+        Error = originalError;
+    }
+    return result;
+}
         function detectBrowserSecurity() {
             return new Promise((resolve) => {
                 let securityIssues = [];
@@ -794,6 +926,7 @@
         window.addEventListener('load', () => {
             setTimeout(startFullDetection, 1000);
         });
+
     </script>
 </body>
 </html>
