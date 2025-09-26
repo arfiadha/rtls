@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Anti Fake Location</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .status-card {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid;
+        }
+        
+        .status-loading {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        
+        .location-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .info-value {
+            color: #6c757d;
+            font-family: monospace;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .security-checks {
+            background: #e7f3ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .check-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .check-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .check-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .check-pass {
+            background: #28a745;
+            color: white;
+        }
+        
+        .check-fail {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .check-loading {
+            background: #ffc107;
+            color: white;
+        }
+        
+        .attendance-form {
+            display: none;
+        }
+        
+        .attendance-form.show {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" x-data="attendanceApp()">
+        <div class="header">
+            <h1>🏢 Sistem Absensi</h1>
+            <p>Keamanan Tingkat Tinggi dengan Anti Fake Location</p>
+        </div>
+        
+        <div class="content">
+            <!-- Status Card -->
+            <div class="status-card" 
+                 :class="{
+                     'status-loading': status === 'loading',
+                     'status-success': status === 'success',
+                     'status-error': status === 'error',
+                     'status-warning': status === 'warning'
+                 }">
+                <div x-show="status === 'loading'">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 10px;">Memverifikasi lokasi dan keamanan...</p>
+                </div>
+                <div x-show="status === 'success'">
+                    <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                    <p><strong>Lokasi Terverifikasi!</strong><br>Anda dapat melakukan absensi</p>
+                </div>
+                <div x-show="status === 'error'">
+                    <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                    <p><strong>Akses Ditolak!</strong><br><span x-text="errorMessage"></span></p>
+                </div>
+                <div x-show="status === 'warning'">
+                    <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+                    <p><strong>Peringatan!</strong><br><span x-text="warningMessage"></span></p>
+                </div>
+            </div>
+            
+            <!-- Security Checks -->
+            <div class="security-checks" x-show="securityChecks.length > 0">
+                <h3 style="margin-bottom: 15px; color: #495057;">🔐 Pemeriksaan Keamanan</h3>
+                <template x-for="check in securityChecks" :key="check.name">
+                    <div class="check-item">
+                        <div class="check-icon" 
+                             :class="{
+                                 'check-pass': check.status === 'pass',
+                                 'check-fail': check.status === 'fail',
+                                 'check-loading': check.status === 'loading'
+                             }">
+                            <span x-show="check.status === 'pass'">✓</span>
+                            <span x-show="check.status === 'fail'">✗</span>
+                            <span x-show="check.status === 'loading'">...</span>
+                        </div>
+                        <span x-text="check.message"></span>
+                    </div>
+                </template>
+            </div>
+            
+            <!-- Location Info -->
+            <div class="location-info" x-show="locationData && status === 'success'">
+                <h3 style="margin-bottom: 15px; color: #495057;">📍 Informasi Lokasi</h3>
+                <div class="info-row">
+                    <span class="info-label">Latitude:</span>
+                    <span class="info-value" x-text="locationData?.latitude?.toFixed(6)"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Longitude:</span>
+                    <span class="info-value" x-text="locationData?.longitude?.toFixed(6)"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Akurasi:</span>
+                    <span class="info-value" x-text="locationData?.accuracy + ' meter'"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Waktu:</span>
+                    <span class="info-value" x-text="new Date(locationData?.timestamp).toLocaleString('id-ID')"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Jarak dari Kantor:</span>
+                    <span class="info-value" x-text="distanceFromOffice + ' meter'"></span>
+                </div>
+            </div>
+            
+            <!-- Attendance Form -->
+            <div class="attendance-form" :class="{ 'show': status === 'success' }">
+                <form @submit.prevent="submitAttendance">
+                    <div class="form-group">
+                        <label for="employeeId">ID Karyawan:</label>
+                        <input type="text" id="employeeId" x-model="attendanceData.employeeId" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="attendanceType">Jenis Absensi:</label>
+                        <select id="attendanceType" x-model="attendanceData.type" required>
+                            <option value="">Pilih Jenis Absensi</option>
+                            <option value="masuk">Masuk</option>
+                            <option value="keluar">Keluar</option>
+                            <option value="istirahat">Istirahat</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Catatan (Opsional):</label>
+                        <input type="text" id="notes" x-model="attendanceData.notes" placeholder="Masukkan catatan jika ada">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" :disabled="submitting">
+                        <span x-show="!submitting">📝 Submit Absensi</span>
+                        <span x-show="submitting">
+                            <div class="loading-spinner"></div>
+                            Memproses...
+                        </span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Manual Check Button -->
+            <button class="btn btn-primary" 
+                    @click="checkLocation" 
+                    :disabled="status === 'loading'"
+                    x-show="status !== 'success'">
+                <span x-show="status !== 'loading'">🔍 Periksa Lokasi</span>
+                <span x-show="status === 'loading'">
+                    <div class="loading-spinner"></div>
+                    Memeriksa...
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function attendanceApp() {
+            return {
+                status: 'loading', // loading, success, error, warning
+                locationData: null,
+                errorMessage: '',
+                warningMessage: '',
+                securityChecks: [],
+                distanceFromOffice: 0,
+                submitting: false,
+                attendanceData: {
+                    employeeId: '',
+                    type: '',
+                    notes: ''
+                },
+                
+                // Koordinat kantor (ganti dengan koordinat kantor Anda)
+                officeLocation: {
+                    latitude: -7.797068, // Contoh: Yogyakarta
+                    longitude: 110.370529,
+                    radius: 100 // radius dalam meter
+                },
+                
+                init() {
+                    this.checkLocation();
+                },
+                
+                async checkLocation() {
+                    this.status = 'loading';
+                    this.securityChecks = [];
+                    this.addSecurityCheck('Memeriksa dukungan GPS', 'loading');
+                    
+                    try {
+                        // Check if geolocation is supported
+                        if (!navigator.geolocation) {
+                            throw new Error('Geolocation tidak didukung oleh browser ini');
+                        }
+                        
+                        this.updateSecurityCheck('Memeriksa dukungan GPS', 'pass', 'GPS didukung');
+                        this.addSecurityCheck('Memeriksa izin lokasi', 'loading');
+                        
+                        // Check permissions
+                        const permission = await navigator.permissions.query({name: 'geolocation'});
+                        if (permission.state === 'denied') {
+                            throw new Error('Izin akses lokasi ditolak');
+                        }
+                        
+                        this.updateSecurityCheck('Memeriksa izin lokasi', 'pass', 'Izin lokasi diberikan');
+                        this.addSecurityCheck('Mengambil koordinat GPS', 'loading');
+                        
+                        // Get current position with high accuracy
+                        const position = await this.getCurrentPosition({
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
+                        });
+                        
+                        this.locationData = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: position.timestamp
+                        };
+                        
+                        this.updateSecurityCheck('Mengambil koordinat GPS', 'pass', 'Koordinat berhasil diperoleh');
+                        this.addSecurityCheck('Memeriksa akurasi GPS', 'loading');
+                        
+                        // Check accuracy
+                        if (position.coords.accuracy > 50) {
+                            this.updateSecurityCheck('Memeriksa akurasi GPS', 'fail', `Akurasi rendah: ${position.coords.accuracy}m`);
+                            throw new Error(`Akurasi GPS terlalu rendah (${position.coords.accuracy}m). Harap pindah ke area dengan sinyal GPS yang lebih baik.`);
+                        }
+                        
+                        this.updateSecurityCheck('Memeriksa akurasi GPS', 'pass', `Akurasi baik: ${position.coords.accuracy}m`);
+                        this.addSecurityCheck('Deteksi lokasi palsu', 'loading');
+                        
+                        // Anti-spoofing checks
+                        const spoofingDetected = await this.detectLocationSpoofing(position);
+                        if (spoofingDetected.detected) {
+                            this.updateSecurityCheck('Deteksi lokasi palsu', 'fail', spoofingDetected.reason);
+                            throw new Error(`Terdeteksi penggunaan lokasi palsu: ${spoofingDetected.reason}`);
+                        }
+                        
+                        this.updateSecurityCheck('Deteksi lokasi palsu', 'pass', 'Lokasi asli terverifikasi');
+                        this.addSecurityCheck('Memeriksa jarak dari kantor', 'loading');
+                        
+                        // Calculate distance from office
+                        this.distanceFromOffice = this.calculateDistance(
+                            this.locationData.latitude,
+                            this.locationData.longitude,
+                            this.officeLocation.latitude,
+                            this.officeLocation.longitude
+                        );
+                        
+                        if (this.distanceFromOffice > this.officeLocation.radius) {
+                            this.updateSecurityCheck('Memeriksa jarak dari kantor', 'fail', `Jarak: ${this.distanceFromOffice}m`);
+                            throw new Error(`Anda berada terlalu jauh dari kantor (${this.distanceFromOffice}m dari radius ${this.officeLocation.radius}m)`);
+                        }
+                        
+                        this.updateSecurityCheck('Memeriksa jarak dari kantor', 'pass', `Dalam radius: ${this.distanceFromOffice}m`);
+                        this.addSecurityCheck('Verifikasi final', 'loading');
+                        
+                        // Final verification
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        this.updateSecurityCheck('Verifikasi final', 'pass', 'Semua pemeriksaan berhasil');
+                        
+                        this.status = 'success';
+                        
+                    } catch (error) {
+                        this.status = 'error';
+                        this.errorMessage = error.message;
+                        console.error('Location check failed:', error);
+                    }
+                },
+                
+                getCurrentPosition(options) {
+                    return new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, options);
+                    });
+                },
+                
+                async detectLocationSpoofing(position) {
+                    const checks = [];
+                    
+                    // Check 1: Unrealistic accuracy (too perfect)
+                    if (position.coords.accuracy < 1) {
+                        checks.push({
+                            detected: true,
+                            reason: 'Akurasi GPS terlalu sempurna (kemungkinan mock location)'
+                        });
+                    }
+                    
+                    // Check 2: Check if coordinates are at exact integers (common in spoofed locations)
+                    const latDecimals = (position.coords.latitude.toString().split('.')[1] || '').length;
+                    const lonDecimals = (position.coords.longitude.toString().split('.')[1] || '').length;
+                    
+                    if (latDecimals < 3 && lonDecimals < 3) {
+                        checks.push({
+                            detected: true,
+                            reason: 'Koordinat terlalu sederhana (kemungkinan dipalsukan)'
+                        });
+                    }
+                    
+                    // Check 3: Speed check (if we have previous location)
+                    const lastLocation = this.getLastKnownLocation();
+                    if (lastLocation) {
+                        const timeDiff = (position.timestamp - lastLocation.timestamp) / 1000; // seconds
+                        const distance = this.calculateDistance(
+                            position.coords.latitude,
+                            position.coords.longitude,
+                            lastLocation.latitude,
+                            lastLocation.longitude
+                        );
+                        const speed = distance / timeDiff; // m/s
+                        const speedKmh = speed * 3.6; // km/h
+                        
+                        if (speedKmh > 200) { // Unrealistic speed > 200 km/h
+                            checks.push({
+                                detected: true,
+                                reason: `Pergerakan tidak realistis: ${speedKmh.toFixed(1)} km/h`
+                            });
+                        }
+                    }
+                    
+                    // Check 4: Multiple rapid location requests (mock apps often return instantly)
+                    const startTime = Date.now();
+                    try {
+                        const quickPosition = await this.getCurrentPosition({
+                            enableHighAccuracy: true,
+                            timeout: 1000,
+                            maximumAge: 0
+                        });
+                        const responseTime = Date.now() - startTime;
+                        
+                        if (responseTime < 100) { // Too fast response
+                            checks.push({
+                                detected: true,
+                                reason: 'Respons GPS terlalu cepat (kemungkinan mock location)'
+                            });
+                        }
+                    } catch (e) {
+                        // This is actually good - real GPS might timeout on quick requests
+                    }
+                    
+                    // Save current location for future speed checks
+                    this.saveLastKnownLocation(position);
+                    
+                    // Return the most severe detection
+                    const detectedCheck = checks.find(check => check.detected);
+                    return detectedCheck || { detected: false };
+                },
+                
+                getLastKnownLocation() {
+                    const stored = sessionStorage.getItem('lastKnownLocation');
+                    return stored ? JSON.parse(stored) : null;
+                },
+                
+                saveLastKnownLocation(position) {
+                    const locationData = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        timestamp: position.timestamp
+                    };
+                    sessionStorage.setItem('lastKnownLocation', JSON.stringify(locationData));
+                },
+                
+                calculateDistance(lat1, lon1, lat2, lon2) {
+                    const R = 6371e3; // Earth's radius in meters
+                    const φ1 = lat1 * Math.PI/180;
+                    const φ2 = lat2 * Math.PI/180;
+                    const Δφ = (lat2-lat1) * Math.PI/180;
+                    const Δλ = (lon2-lon1) * Math.PI/180;
+
+                    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                              Math.cos(φ1) * Math.cos(φ2) *
+                              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+                    return Math.round(R * c);
+                },
+                
+                addSecurityCheck(message, status) {
+                    this.securityChecks.push({
+                        name: message,
+                        message: message,
+                        status: status
+                    });
+                },
+                
+                updateSecurityCheck(name, status, message = null) {
+                    const check = this.securityChecks.find(c => c.name === name);
+                    if (check) {
+                        check.status = status;
+                        if (message) check.message = message;
+                    }
+                },
+                
+                async submitAttendance() {
+                    if (!this.attendanceData.employeeId || !this.attendanceData.type) {
+                        alert('Mohon lengkapi data yang diperlukan');
+                        return;
+                    }
+                    
+                    this.submitting = true;
+                    
+                    try {
+                        // Simulate API call
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        
+                        const attendanceRecord = {
+                            employeeId: this.attendanceData.employeeId,
+                            type: this.attendanceData.type,
+                            notes: this.attendanceData.notes,
+                            timestamp: new Date().toISOString(),
+                            location: {
+                                latitude: this.locationData.latitude,
+                                longitude: this.locationData.longitude,
+                                accuracy: this.locationData.accuracy
+                            },
+                            distanceFromOffice: this.distanceFromOffice,
+                            securityVerified: true
+                        };
+                        
+                        console.log('Attendance submitted:', attendanceRecord);
+                        alert(`Absensi ${this.attendanceData.type} berhasil dicatat!\nWaktu: ${new Date().toLocaleString('id-ID')}`);
+                        
+                        // Reset form
+                        this.attendanceData = {
+                            employeeId: '',
+                            type: '',
+                            notes: ''
+                        };
+                        
+                    } catch (error) {
+                        alert('Gagal mencatat absensi: ' + error.message);
+                    } finally {
+                        this.submitting = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
