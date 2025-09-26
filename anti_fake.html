@@ -3,640 +3,779 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Absensi Anti Fake Location</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <title>Location Security Detector</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .status-card {
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 2px solid;
-        }
-        
-        .status-loading {
-            background: #f8f9fa;
-            border-color: #e9ecef;
-            color: #6c757d;
-        }
-        
-        .status-success {
-            background: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
-        }
-        
-        .status-error {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-        
-        .status-warning {
-            background: #fff3cd;
-            border-color: #ffeaa7;
-            color: #856404;
-        }
-        
-        .location-info {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .info-row {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
-        
-        .info-row:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .info-value {
-            color: #6c757d;
-            font-family: monospace;
-        }
-        
-        .btn {
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
             width: 100%;
-            padding: 15px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .detection-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .detection-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .detection-card.checking {
+            border-left-color: #ffc107;
+            background: #fff8dc;
+        }
+
+        .detection-card.safe {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .detection-card.warning {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .detection-card.danger {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .detection-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detection-status {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .detection-details {
+            font-size: 12px;
+            color: #666;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
             border: none;
-            border-radius: 12px;
+            padding: 15px 30px;
+            border-radius: 25px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-bottom: 20px;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover:not(:disabled) {
+
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
-        
+
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .security-checks {
-            background: #e7f3ff;
-            border-radius: 12px;
+
+        .location-info {
+            background: #f8f9fa;
+            border-radius: 15px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-top: 20px;
         }
-        
-        .check-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
+
+        .location-info h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .location-data {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             font-size: 14px;
         }
-        
-        .check-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .check-icon {
+
+        .status-icon {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
+            display: inline-block;
         }
-        
-        .check-pass {
-            background: #28a745;
-            color: white;
+
+        .icon-checking { background: #ffc107; }
+        .icon-safe { background: #28a745; }
+        .icon-warning { background: #ffc107; }
+        .icon-danger { background: #dc3545; }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
         }
-        
-        .check-fail {
-            background: #dc3545;
-            color: white;
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        .check-loading {
-            background: #ffc107;
-            color: white;
-        }
-        
-        .attendance-form {
-            display: none;
-        }
-        
-        .attendance-form.show {
-            display: block;
-        }
-        
-        .form-group {
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #495057;
+
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
         }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
         }
-        
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
         }
     </style>
 </head>
 <body>
-    <div class="container" x-data="attendanceApp()">
+    <div class="container">
         <div class="header">
-            <h1>🏢 Sistem Absensi</h1>
-            <p>Keamanan Tingkat Tinggi dengan Anti Fake Location</p>
+            <h1>🛡️ Location Security Detector</h1>
+            <p>Deteksi lokasi palsu, mock location, dan developer options</p>
         </div>
-        
-        <div class="content">
-            <!-- Status Card -->
-            <div class="status-card" 
-                 :class="{
-                     'status-loading': status === 'loading',
-                     'status-success': status === 'success',
-                     'status-error': status === 'error',
-                     'status-warning': status === 'warning'
-                 }">
-                <div x-show="status === 'loading'">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 10px;">Memverifikasi lokasi dan keamanan...</p>
+
+        <button class="btn" id="startDetection" onclick="startFullDetection()">
+            🔍 Mulai Deteksi Keamanan
+        </button>
+
+        <div class="detection-grid">
+            <div class="detection-card" id="gpsCard">
+                <div class="detection-title">
+                    <span class="status-icon" id="gpsIcon"></span>
+                    📍 Deteksi GPS & Lokasi
                 </div>
-                <div x-show="status === 'success'">
-                    <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
-                    <p><strong>Lokasi Terverifikasi!</strong><br>Anda dapat melakukan absensi</p>
-                </div>
-                <div x-show="status === 'error'">
-                    <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
-                    <p><strong>Akses Ditolak!</strong><br><span x-text="errorMessage"></span></p>
-                </div>
-                <div x-show="status === 'warning'">
-                    <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
-                    <p><strong>Peringatan!</strong><br><span x-text="warningMessage"></span></p>
-                </div>
+                <div class="detection-status" id="gpsStatus">Menunggu deteksi...</div>
+                <div class="detection-details" id="gpsDetails"></div>
             </div>
-            
-            <!-- Security Checks -->
-            <div class="security-checks" x-show="securityChecks.length > 0">
-                <h3 style="margin-bottom: 15px; color: #495057;">🔐 Pemeriksaan Keamanan</h3>
-                <template x-for="check in securityChecks" :key="check.name">
-                    <div class="check-item">
-                        <div class="check-icon" 
-                             :class="{
-                                 'check-pass': check.status === 'pass',
-                                 'check-fail': check.status === 'fail',
-                                 'check-loading': check.status === 'loading'
-                             }">
-                            <span x-show="check.status === 'pass'">✓</span>
-                            <span x-show="check.status === 'fail'">✗</span>
-                            <span x-show="check.status === 'loading'">...</span>
-                        </div>
-                        <span x-text="check.message"></span>
-                    </div>
-                </template>
+
+            <div class="detection-card" id="mockCard">
+                <div class="detection-title">
+                    <span class="status-icon" id="mockIcon"></span>
+                    🎭 Mock Location Detection
+                </div>
+                <div class="detection-status" id="mockStatus">Menunggu deteksi...</div>
+                <div class="detection-details" id="mockDetails"></div>
             </div>
-            
-            <!-- Location Info -->
-            <div class="location-info" x-show="locationData && status === 'success'">
-                <h3 style="margin-bottom: 15px; color: #495057;">📍 Informasi Lokasi</h3>
-                <div class="info-row">
-                    <span class="info-label">Latitude:</span>
-                    <span class="info-value" x-text="locationData?.latitude?.toFixed(6)"></span>
+
+            <div class="detection-card" id="devCard">
+                <div class="detection-title">
+                    <span class="status-icon" id="devIcon"></span>
+                    ⚙️ Developer Options
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Longitude:</span>
-                    <span class="info-value" x-text="locationData?.longitude?.toFixed(6)"></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Akurasi:</span>
-                    <span class="info-value" x-text="locationData?.accuracy + ' meter'"></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Waktu:</span>
-                    <span class="info-value" x-text="new Date(locationData?.timestamp).toLocaleString('id-ID')"></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Jarak dari Kantor:</span>
-                    <span class="info-value" x-text="distanceFromOffice + ' meter'"></span>
-                </div>
+                <div class="detection-status" id="devStatus">Menunggu deteksi...</div>
+                <div class="detection-details" id="devDetails"></div>
             </div>
-            
-            <!-- Attendance Form -->
-            <div class="attendance-form" :class="{ 'show': status === 'success' }">
-                <form @submit.prevent="submitAttendance">
-                    <div class="form-group">
-                        <label for="employeeId">ID Karyawan:</label>
-                        <input type="text" id="employeeId" x-model="attendanceData.employeeId" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="attendanceType">Jenis Absensi:</label>
-                        <select id="attendanceType" x-model="attendanceData.type" required>
-                            <option value="">Pilih Jenis Absensi</option>
-                            <option value="masuk">Masuk</option>
-                            <option value="keluar">Keluar</option>
-                            <option value="istirahat">Istirahat</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="notes">Catatan (Opsional):</label>
-                        <input type="text" id="notes" x-model="attendanceData.notes" placeholder="Masukkan catatan jika ada">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary" :disabled="submitting">
-                        <span x-show="!submitting">📝 Submit Absensi</span>
-                        <span x-show="submitting">
-                            <div class="loading-spinner"></div>
-                            Memproses...
-                        </span>
-                    </button>
-                </form>
+
+            <div class="detection-card" id="browserCard">
+                <div class="detection-title">
+                    <span class="status-icon" id="browserIcon"></span>
+                    🌐 Browser Security
+                </div>
+                <div class="detection-status" id="browserStatus">Menunggu deteksi...</div>
+                <div class="detection-details" id="browserDetails"></div>
             </div>
-            
-            <!-- Manual Check Button -->
-            <button class="btn btn-primary" 
-                    @click="checkLocation" 
-                    :disabled="status === 'loading'"
-                    x-show="status !== 'success'">
-                <span x-show="status !== 'loading'">🔍 Periksa Lokasi</span>
-                <span x-show="status === 'loading'">
-                    <div class="loading-spinner"></div>
-                    Memeriksa...
-                </span>
-            </button>
+        </div>
+
+        <div class="location-info" id="locationInfo" style="display: none;">
+            <h3>📊 Informasi Lokasi</h3>
+            <div class="location-data" id="locationData"></div>
         </div>
     </div>
 
     <script>
-        function attendanceApp() {
-            return {
-                status: 'loading', // loading, success, error, warning
-                locationData: null,
-                errorMessage: '',
-                warningMessage: '',
-                securityChecks: [],
-                distanceFromOffice: 0,
-                submitting: false,
-                attendanceData: {
-                    employeeId: '',
-                    type: '',
-                    notes: ''
-                },
-                
-                // Koordinat kantor (ganti dengan koordinat kantor Anda)
-                officeLocation: {
-                    latitude: -7.797068, // Contoh: Yogyakarta
-                    longitude: 110.370529,
-                    radius: 100 // radius dalam meter
-                },
-                
-                init() {
-                    this.checkLocation();
-                },
-                
-                async checkLocation() {
-                    this.status = 'loading';
-                    this.securityChecks = [];
-                    this.addSecurityCheck('Memeriksa dukungan GPS', 'loading');
-                    
-                    try {
-                        // Check if geolocation is supported
-                        if (!navigator.geolocation) {
-                            throw new Error('Geolocation tidak didukung oleh browser ini');
-                        }
-                        
-                        this.updateSecurityCheck('Memeriksa dukungan GPS', 'pass', 'GPS didukung');
-                        this.addSecurityCheck('Memeriksa izin lokasi', 'loading');
-                        
-                        // Check permissions
-                        const permission = await navigator.permissions.query({name: 'geolocation'});
-                        if (permission.state === 'denied') {
-                            throw new Error('Izin akses lokasi ditolak');
-                        }
-                        
-                        this.updateSecurityCheck('Memeriksa izin lokasi', 'pass', 'Izin lokasi diberikan');
-                        this.addSecurityCheck('Mengambil koordinat GPS', 'loading');
-                        
-                        // Get current position with high accuracy
-                        const position = await this.getCurrentPosition({
-                            enableHighAccuracy: true,
-                            timeout: 10000,
-                            maximumAge: 0
-                        });
-                        
-                        this.locationData = {
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy,
-                            timestamp: position.timestamp
-                        };
-                        
-                        this.updateSecurityCheck('Mengambil koordinat GPS', 'pass', 'Koordinat berhasil diperoleh');
-                        this.addSecurityCheck('Memeriksa akurasi GPS', 'loading');
-                        
-                        // Check accuracy
-                        if (position.coords.accuracy > 50) {
-                            this.updateSecurityCheck('Memeriksa akurasi GPS', 'fail', `Akurasi rendah: ${position.coords.accuracy}m`);
-                            throw new Error(`Akurasi GPS terlalu rendah (${position.coords.accuracy}m). Harap pindah ke area dengan sinyal GPS yang lebih baik.`);
-                        }
-                        
-                        this.updateSecurityCheck('Memeriksa akurasi GPS', 'pass', `Akurasi baik: ${position.coords.accuracy}m`);
-                        this.addSecurityCheck('Deteksi lokasi palsu', 'loading');
-                        
-                        // Anti-spoofing checks
-                        const spoofingDetected = await this.detectLocationSpoofing(position);
-                        if (spoofingDetected.detected) {
-                            this.updateSecurityCheck('Deteksi lokasi palsu', 'fail', spoofingDetected.reason);
-                            throw new Error(`Terdeteksi penggunaan lokasi palsu: ${spoofingDetected.reason}`);
-                        }
-                        
-                        this.updateSecurityCheck('Deteksi lokasi palsu', 'pass', 'Lokasi asli terverifikasi');
-                        this.addSecurityCheck('Memeriksa jarak dari kantor', 'loading');
-                        
-                        // Calculate distance from office
-                        this.distanceFromOffice = this.calculateDistance(
-                            this.locationData.latitude,
-                            this.locationData.longitude,
-                            this.officeLocation.latitude,
-                            this.officeLocation.longitude
-                        );
-                        
-                        if (this.distanceFromOffice > this.officeLocation.radius) {
-                            this.updateSecurityCheck('Memeriksa jarak dari kantor', 'fail', `Jarak: ${this.distanceFromOffice}m`);
-                            throw new Error(`Anda berada terlalu jauh dari kantor (${this.distanceFromOffice}m dari radius ${this.officeLocation.radius}m)`);
-                        }
-                        
-                        this.updateSecurityCheck('Memeriksa jarak dari kantor', 'pass', `Dalam radius: ${this.distanceFromOffice}m`);
-                        this.addSecurityCheck('Verifikasi final', 'loading');
-                        
-                        // Final verification
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        this.updateSecurityCheck('Verifikasi final', 'pass', 'Semua pemeriksaan berhasil');
-                        
-                        this.status = 'success';
-                        
-                    } catch (error) {
-                        this.status = 'error';
-                        this.errorMessage = error.message;
-                        console.error('Location check failed:', error);
-                    }
-                },
-                
-                getCurrentPosition(options) {
-                    return new Promise((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, options);
-                    });
-                },
-                
-                async detectLocationSpoofing(position) {
-                    const checks = [];
-                    
-                    // Check 1: Unrealistic accuracy (too perfect)
-                    if (position.coords.accuracy < 1) {
-                        checks.push({
-                            detected: true,
-                            reason: 'Akurasi GPS terlalu sempurna (kemungkinan mock location)'
-                        });
-                    }
-                    
-                    // Check 2: Check if coordinates are at exact integers (common in spoofed locations)
-                    const latDecimals = (position.coords.latitude.toString().split('.')[1] || '').length;
-                    const lonDecimals = (position.coords.longitude.toString().split('.')[1] || '').length;
-                    
-                    if (latDecimals < 3 && lonDecimals < 3) {
-                        checks.push({
-                            detected: true,
-                            reason: 'Koordinat terlalu sederhana (kemungkinan dipalsukan)'
-                        });
-                    }
-                    
-                    // Check 3: Speed check (if we have previous location)
-                    const lastLocation = this.getLastKnownLocation();
-                    if (lastLocation) {
-                        const timeDiff = (position.timestamp - lastLocation.timestamp) / 1000; // seconds
-                        const distance = this.calculateDistance(
-                            position.coords.latitude,
-                            position.coords.longitude,
-                            lastLocation.latitude,
-                            lastLocation.longitude
-                        );
-                        const speed = distance / timeDiff; // m/s
-                        const speedKmh = speed * 3.6; // km/h
-                        
-                        if (speedKmh > 200) { // Unrealistic speed > 200 km/h
-                            checks.push({
-                                detected: true,
-                                reason: `Pergerakan tidak realistis: ${speedKmh.toFixed(1)} km/h`
-                            });
-                        }
-                    }
-                    
-                    // Check 4: Multiple rapid location requests (mock apps often return instantly)
-                    const startTime = Date.now();
-                    try {
-                        const quickPosition = await this.getCurrentPosition({
-                            enableHighAccuracy: true,
-                            timeout: 1000,
-                            maximumAge: 0
-                        });
-                        const responseTime = Date.now() - startTime;
-                        
-                        if (responseTime < 100) { // Too fast response
-                            checks.push({
-                                detected: true,
-                                reason: 'Respons GPS terlalu cepat (kemungkinan mock location)'
-                            });
-                        }
-                    } catch (e) {
-                        // This is actually good - real GPS might timeout on quick requests
-                    }
-                    
-                    // Save current location for future speed checks
-                    this.saveLastKnownLocation(position);
-                    
-                    // Return the most severe detection
-                    const detectedCheck = checks.find(check => check.detected);
-                    return detectedCheck || { detected: false };
-                },
-                
-                getLastKnownLocation() {
-                    const stored = sessionStorage.getItem('lastKnownLocation');
-                    return stored ? JSON.parse(stored) : null;
-                },
-                
-                saveLastKnownLocation(position) {
-                    const locationData = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        timestamp: position.timestamp
-                    };
-                    sessionStorage.setItem('lastKnownLocation', JSON.stringify(locationData));
-                },
-                
-                calculateDistance(lat1, lon1, lat2, lon2) {
-                    const R = 6371e3; // Earth's radius in meters
-                    const φ1 = lat1 * Math.PI/180;
-                    const φ2 = lat2 * Math.PI/180;
-                    const Δφ = (lat2-lat1) * Math.PI/180;
-                    const Δλ = (lon2-lon1) * Math.PI/180;
+        let detectionResults = {
+            gps: null,
+            mock: null,
+            developer: null,
+            browser: null
+        };
 
-                    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                              Math.cos(φ1) * Math.cos(φ2) *
-                              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        let previousLocations = [];
+        let locationHistory = [];
 
-                    return Math.round(R * c);
-                },
-                
-                addSecurityCheck(message, status) {
-                    this.securityChecks.push({
-                        name: message,
-                        message: message,
-                        status: status
-                    });
-                },
-                
-                updateSecurityCheck(name, status, message = null) {
-                    const check = this.securityChecks.find(c => c.name === name);
-                    if (check) {
-                        check.status = status;
-                        if (message) check.message = message;
-                    }
-                },
-                
-                async submitAttendance() {
-                    if (!this.attendanceData.employeeId || !this.attendanceData.type) {
-                        alert('Mohon lengkapi data yang diperlukan');
-                        return;
-                    }
-                    
-                    this.submitting = true;
-                    
-                    try {
-                        // Simulate API call
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        
-                        const attendanceRecord = {
-                            employeeId: this.attendanceData.employeeId,
-                            type: this.attendanceData.type,
-                            notes: this.attendanceData.notes,
-                            timestamp: new Date().toISOString(),
-                            location: {
-                                latitude: this.locationData.latitude,
-                                longitude: this.locationData.longitude,
-                                accuracy: this.locationData.accuracy
-                            },
-                            distanceFromOffice: this.distanceFromOffice,
-                            securityVerified: true
-                        };
-                        
-                        console.log('Attendance submitted:', attendanceRecord);
-                        alert(`Absensi ${this.attendanceData.type} berhasil dicatat!\nWaktu: ${new Date().toLocaleString('id-ID')}`);
-                        
-                        // Reset form
-                        this.attendanceData = {
-                            employeeId: '',
-                            type: '',
-                            notes: ''
-                        };
-                        
-                    } catch (error) {
-                        alert('Gagal mencatat absensi: ' + error.message);
-                    } finally {
-                        this.submitting = false;
-                    }
-                }
+        async function startFullDetection() {
+            const btn = document.getElementById('startDetection');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Mendeteksi...';
+
+            // Reset status
+            resetDetectionStatus();
+
+            try {
+                // Jalankan semua deteksi secara paralel
+                await Promise.all([
+                    detectGPSLocation(),
+                    detectMockLocation(),
+                    detectDeveloperOptions(),
+                    detectBrowserSecurity()
+                ]);
+
+                showFinalResults();
+            } catch (error) {
+                console.error('Error during detection:', error);
+                showAlert('Terjadi kesalahan saat melakukan deteksi', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔍 Mulai Deteksi Ulang';
             }
         }
+
+        function resetDetectionStatus() {
+            const cards = ['gps', 'mock', 'dev', 'browser'];
+            cards.forEach(card => {
+                updateDetectionCard(card, 'checking', 'Sedang memeriksa...', '');
+            });
+        }
+
+        async function detectGPSLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    detectionResults.gps = {
+                        status: 'danger',
+                        message: 'Geolocation tidak didukung browser',
+                        details: 'Browser ini tidak mendukung API Geolocation'
+                    };
+                    updateDetectionCard('gps', 'danger', detectionResults.gps.message, detectionResults.gps.details);
+                    resolve();
+                    return;
+                }
+
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { coords } = position;
+                        const accuracy = coords.accuracy;
+                        
+                        // Analisis akurasi untuk mendeteksi kemungkinan lokasi palsu
+                        let suspicionLevel = 'safe';
+                        let message = 'Lokasi GPS terdeteksi normal';
+                        let details = `Akurasi: ${accuracy.toFixed(2)}m`;
+
+                        if (accuracy > 1000) {
+                            suspicionLevel = 'warning';
+                            message = 'Akurasi GPS rendah - mungkin indoor';
+                            details += ' (Akurasi sangat rendah)';
+                        } else if (accuracy < 5) {
+                            suspicionLevel = 'warning';
+                            message = 'Akurasi GPS terlalu tinggi - mencurigakan';
+                            details += ' (Akurasi terlalu sempurna)';
+                        }
+
+                        // Cek konsistensi lokasi
+                        if (previousLocations.length > 0) {
+                            const lastLocation = previousLocations[previousLocations.length - 1];
+                            const distance = calculateDistance(
+                                coords.latitude, coords.longitude,
+                                lastLocation.lat, lastLocation.lng
+                            );
+                            
+                            if (distance > 100000) { // > 100km dalam waktu singkat
+                                suspicionLevel = 'danger';
+                                message = 'Perpindahan lokasi tidak wajar';
+                                details += ` | Jarak dari lokasi sebelumnya: ${(distance/1000).toFixed(2)}km`;
+                            }
+                        }
+
+                        previousLocations.push({
+                            lat: coords.latitude,
+                            lng: coords.longitude,
+                            timestamp: Date.now(),
+                            accuracy: accuracy
+                        });
+
+                        locationHistory.push({
+                            timestamp: new Date().toLocaleString(),
+                            latitude: coords.latitude.toFixed(6),
+                            longitude: coords.longitude.toFixed(6),
+                            accuracy: accuracy.toFixed(2) + 'm',
+                            altitude: coords.altitude ? coords.altitude.toFixed(2) + 'm' : 'N/A',
+                            speed: coords.speed ? coords.speed.toFixed(2) + 'm/s' : 'N/A'
+                        });
+
+                        detectionResults.gps = {
+                            status: suspicionLevel,
+                            message: message,
+                            details: details,
+                            position: coords
+                        };
+
+                        updateDetectionCard('gps', suspicionLevel, message, details);
+                        updateLocationInfo();
+                        resolve();
+                    },
+                    (error) => {
+                        let message = 'Gagal mendapatkan lokasi GPS';
+                        let details = '';
+
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                message = 'Izin lokasi ditolak';
+                                details = 'User menolak permintaan akses lokasi';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                message = 'Lokasi tidak tersedia';
+                                details = 'Informasi lokasi tidak dapat diperoleh';
+                                break;
+                            case error.TIMEOUT:
+                                message = 'Timeout mendapatkan lokasi';
+                                details = 'Permintaan lokasi melebihi batas waktu';
+                                break;
+                        }
+
+                        detectionResults.gps = {
+                            status: 'danger',
+                            message: message,
+                            details: details
+                        };
+
+                        updateDetectionCard('gps', 'danger', message, details);
+                        resolve();
+                    },
+                    options
+                );
+            });
+        }
+
+        async function detectMockLocation() {
+            return new Promise((resolve) => {
+                let suspiciousFactors = [];
+                let mockProbability = 0;
+
+                // Test 1: Cek konsistensi waktu lokasi
+                if (navigator.geolocation) {
+                    const startTime = Date.now();
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (position1) => {
+                            const time1 = Date.now();
+                            
+                            // Minta lokasi lagi dengan interval singkat
+                            setTimeout(() => {
+                                navigator.geolocation.getCurrentPosition(
+                                    (position2) => {
+                                        const time2 = Date.now();
+                                        
+                                        // Analisis pola waktu respons
+                                        const responseTime1 = time1 - startTime;
+                                        const responseTime2 = time2 - (time1 + 100);
+                                        
+                                        if (responseTime1 < 50 || responseTime2 < 50) {
+                                            suspiciousFactors.push('Waktu respons GPS terlalu cepat');
+                                            mockProbability += 30;
+                                        }
+
+                                        // Cek apakah koordinat persis sama
+                                        if (position1.coords.latitude === position2.coords.latitude &&
+                                            position1.coords.longitude === position2.coords.longitude) {
+                                            suspiciousFactors.push('Koordinat identik pada pembacaan berulang');
+                                            mockProbability += 25;
+                                        }
+
+                                        // Cek akurasi yang tidak realistis
+                                        if (position1.coords.accuracy < 3) {
+                                            suspiciousFactors.push('Akurasi GPS terlalu tinggi');
+                                            mockProbability += 20;
+                                        }
+
+                                        finalizeMockDetection();
+                                    },
+                                    () => finalizeMockDetection(),
+                                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                                );
+                            }, 100);
+                        },
+                        () => finalizeMockDetection(),
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                } else {
+                    finalizeMockDetection();
+                }
+
+                function finalizeMockDetection() {
+                    // Test tambahan: Deteksi Developer Tools
+                    if (isDevToolsOpen()) {
+                        suspiciousFactors.push('Developer Tools terdeteksi terbuka');
+                        mockProbability += 15;
+                    }
+
+                    // Test: Deteksi virtual environment
+                    if (detectVirtualEnvironment()) {
+                        suspiciousFactors.push('Kemungkinan berjalan di virtual environment');
+                        mockProbability += 20;
+                    }
+
+                    let status = 'safe';
+                    let message = 'Tidak terdeteksi mock location';
+                    let details = 'Lokasi tampak authentic';
+
+                    if (mockProbability >= 70) {
+                        status = 'danger';
+                        message = 'Mock location sangat mungkin aktif';
+                        details = suspiciousFactors.join(' | ');
+                    } else if (mockProbability >= 40) {
+                        status = 'warning';
+                        message = 'Kemungkinan mock location terdeteksi';
+                        details = suspiciousFactors.length > 0 ? suspiciousFactors.join(' | ') : 'Beberapa indikator mencurigakan';
+                    }
+
+                    detectionResults.mock = {
+                        status: status,
+                        message: message,
+                        details: details + ` (Skor: ${mockProbability}%)`
+                    };
+
+                    updateDetectionCard('mock', status, message, detectionResults.mock.details);
+                    resolve();
+                }
+            });
+        }
+
+        function detectDeveloperOptions() {
+            return new Promise((resolve) => {
+                let devIndicators = [];
+                let devScore = 0;
+
+                // Test 1: Deteksi DevTools
+                if (isDevToolsOpen()) {
+                    devIndicators.push('Developer Tools terbuka');
+                    devScore += 40;
+                }
+
+                // Test 2: Deteksi debugging
+                if (isDebuggerPresent()) {
+                    devIndicators.push('Debugger terdeteksi');
+                    devScore += 30;
+                }
+
+                // Test 3: Cek console tampering
+                if (isConsoleTampered()) {
+                    devIndicators.push('Console API dimodifikasi');
+                    devScore += 25;
+                }
+
+                // Test 4: Deteksi mobile developer mode indicators
+                if (isMobileDeveloperMode()) {
+                    devIndicators.push('Indikator developer mode mobile');
+                    devScore += 35;
+                }
+
+                // Test 5: Browser extension indicators
+                if (hasSuspiciousExtensions()) {
+                    devIndicators.push('Extension mencurigakan terdeteksi');
+                    devScore += 20;
+                }
+
+                let status = 'safe';
+                let message = 'Developer options tidak terdeteksi';
+                let details = 'Mode normal terdeteksi';
+
+                if (devScore >= 60) {
+                    status = 'danger';
+                    message = 'Developer options kemungkinan aktif';
+                    details = devIndicators.join(' | ');
+                } else if (devScore >= 30) {
+                    status = 'warning';
+                    message = 'Beberapa indikator developer terdeteksi';
+                    details = devIndicators.length > 0 ? devIndicators.join(' | ') : 'Mode development mungkin aktif';
+                }
+
+                detectionResults.developer = {
+                    status: status,
+                    message: message,
+                    details: details + ` (Skor: ${devScore}%)`
+                };
+
+                updateDetectionCard('dev', status, message, detectionResults.developer.details);
+                resolve();
+            });
+        }
+
+        function detectBrowserSecurity() {
+            return new Promise((resolve) => {
+                let securityIssues = [];
+                let securityScore = 100;
+
+                // Test 1: HTTPS Check
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                    securityIssues.push('Tidak menggunakan HTTPS');
+                    securityScore -= 30;
+                }
+
+                // Test 2: Mixed Content
+                if (hasMixedContent()) {
+                    securityIssues.push('Mixed content terdeteksi');
+                    securityScore -= 20;
+                }
+
+                // Test 3: Browser Integrity
+                if (!isBrowserIntegrityGood()) {
+                    securityIssues.push('Integritas browser mencurigakan');
+                    securityScore -= 25;
+                }
+
+                // Test 4: Geolocation API tampering
+                if (isGeolocationTampered()) {
+                    securityIssues.push('Geolocation API mungkin dimodifikasi');
+                    securityScore -= 40;
+                }
+
+                let status = 'safe';
+                let message = 'Browser security normal';
+                let details = 'Tidak ada masalah keamanan terdeteksi';
+
+                if (securityScore < 50) {
+                    status = 'danger';
+                    message = 'Masalah keamanan serius terdeteksi';
+                    details = securityIssues.join(' | ');
+                } else if (securityScore < 80) {
+                    status = 'warning';
+                    message = 'Beberapa masalah keamanan ringan';
+                    details = securityIssues.length > 0 ? securityIssues.join(' | ') : 'Keamanan bisa ditingkatkan';
+                }
+
+                detectionResults.browser = {
+                    status: status,
+                    message: message,
+                    details: details + ` (Skor: ${securityScore}%)`
+                };
+
+                updateDetectionCard('browser', status, message, detectionResults.browser.details);
+                resolve();
+            });
+        }
+
+        // Helper Functions
+        function isDevToolsOpen() {
+            const threshold = 160;
+            return window.outerHeight - window.innerHeight > threshold ||
+                   window.outerWidth - window.innerWidth > threshold;
+        }
+
+        function isDebuggerPresent() {
+            try {
+                const start = new Date().getTime();
+                debugger;
+                const end = new Date().getTime();
+                return end - start > 100;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function isConsoleTampered() {
+            return typeof console.log !== 'function' || 
+                   console.log.toString().indexOf('native code') === -1;
+        }
+
+        function isMobileDeveloperMode() {
+            const ua = navigator.userAgent;
+            // Deteksi emulator atau debugging mode
+            return /Android.*Debug|iPhone.*Debug/i.test(ua) ||
+                   window.DeviceMotionEvent === undefined && /Mobile/i.test(ua);
+        }
+
+        function hasSuspiciousExtensions() {
+            // Cek extension yang umum digunakan untuk spoofing
+            return document.querySelectorAll('*[data-extension]').length > 0 ||
+                   window.chrome && Object.keys(window.chrome).length > 5;
+        }
+
+        function detectVirtualEnvironment() {
+            const ua = navigator.userAgent;
+            return /HeadlessChrome|PhantomJS|Selenium|WebDriver/i.test(ua);
+        }
+
+        function hasMixedContent() {
+            const scripts = document.querySelectorAll('script[src]');
+            const links = document.querySelectorAll('link[href]');
+            
+            for (let script of scripts) {
+                if (script.src && script.src.startsWith('http://')) return true;
+            }
+            for (let link of links) {
+                if (link.href && link.href.startsWith('http://')) return true;
+            }
+            return false;
+        }
+
+        function isBrowserIntegrityGood() {
+            return typeof window.navigator !== 'undefined' &&
+                   typeof window.location !== 'undefined' &&
+                   typeof window.document !== 'undefined';
+        }
+
+        function isGeolocationTampered() {
+            if (!navigator.geolocation) return false;
+            
+            const originalToString = Function.prototype.toString;
+            try {
+                const geolocationString = navigator.geolocation.getCurrentPosition.toString();
+                return !geolocationString.includes('[native code]');
+            } catch (e) {
+                return true;
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
+        function updateDetectionCard(cardType, status, message, details) {
+            const card = document.getElementById(`${cardType}Card`);
+            const icon = document.getElementById(`${cardType}Icon`);
+            const statusEl = document.getElementById(`${cardType}Status`);
+            const detailsEl = document.getElementById(`${cardType}Details`);
+
+            card.className = `detection-card ${status}`;
+            icon.className = `status-icon icon-${status}`;
+            statusEl.textContent = message;
+            detailsEl.textContent = details;
+        }
+
+        function updateLocationInfo() {
+            const locationInfo = document.getElementById('locationInfo');
+            const locationData = document.getElementById('locationData');
+            
+            if (locationHistory.length > 0) {
+                const latest = locationHistory[locationHistory.length - 1];
+                locationData.innerHTML = `
+                    <div><strong>Waktu:</strong> ${latest.timestamp}</div>
+                    <div><strong>Latitude:</strong> ${latest.latitude}</div>
+                    <div><strong>Longitude:</strong> ${latest.longitude}</div>
+                    <div><strong>Akurasi:</strong> ${latest.accuracy}</div>
+                    <div><strong>Ketinggian:</strong> ${latest.altitude}</div>
+                    <div><strong>Kecepatan:</strong> ${latest.speed}</div>
+                `;
+                locationInfo.style.display = 'block';
+            }
+        }
+
+        function showFinalResults() {
+            const results = Object.values(detectionResults);
+            const dangerCount = results.filter(r => r && r.status === 'danger').length;
+            const warningCount = results.filter(r => r && r.status === 'warning').length;
+
+            let alertClass = 'alert-success';
+            let alertMessage = '✅ Semua pemeriksaan keamanan lolos. Lokasi tampak authentic.';
+
+            if (dangerCount > 0) {
+                alertClass = 'alert-danger';
+                alertMessage = `⚠️ ${dangerCount} masalah serius terdeteksi! Lokasi mungkin tidak authentic.`;
+            } else if (warningCount > 0) {
+                alertClass = 'alert-warning';
+                alertMessage = `⚡ ${warningCount} indikator mencurigakan terdeteksi. Perlu investigasi lebih lanjut.`;
+            }
+
+            showAlert(alertMessage, alertClass.replace('alert-', ''));
+        }
+
+        function showAlert(message, type) {
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+
+            const container = document.querySelector('.container');
+            container.insertBefore(alert, container.children[2]);
+        }
+
+        // Auto-start detection when page loads
+        window.addEventListener('load', () => {
+            setTimeout(startFullDetection, 1000);
+        });
     </script>
 </body>
 </html>
