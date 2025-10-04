@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location Security Detector arfi</title>
+    <title>Form Absensi Lokasi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <style>
         * {
             margin: 0;
@@ -15,10 +16,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
         }
 
         .container {
@@ -26,45 +27,254 @@
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 600px;
+            padding: 30px;
+            max-width: 800px;
             width: 100%;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .header h1 {
             color: #333;
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 24px;
+            margin-bottom: 8px;
         }
 
         .header p {
             color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .map-container {
+            margin-bottom: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        #map {
+            height: 350px;
+            width: 100%;
+        }
+
+        .location-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .location-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .info-item label {
+            font-size: 11px;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .info-item value {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 16px;
             font-size: 16px;
         }
 
-        .detection-grid {
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .detection-results {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .detection-card {
             background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
+            padding: 15px;
+            border-radius: 10px;
             border-left: 4px solid #ddd;
-            transition: all 0.3s ease;
-        }
-
-        .detection-card.checking {
-            border-left-color: #ffc107;
-            background: #fff8dc;
         }
 
         .detection-card.safe {
@@ -82,377 +292,426 @@
             background: #fff5f5;
         }
 
-        .detection-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .detection-status {
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .detection-details {
-            font-size: 12px;
-            color: #666;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .location-info {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .location-info h3 {
-            margin-bottom: 15px;
+        .detection-card h4 {
+            font-size: 13px;
+            margin-bottom: 5px;
             color: #333;
         }
 
-        .location-data {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        .detection-card p {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            #map {
+                height: 250px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .detection-results {
+                grid-template-columns: 1fr;
+            }
+
+            .location-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .locked-indicator {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
             font-size: 14px;
         }
-
-        .status-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: inline-block;
+        
+        .form-error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
         }
-
-        .icon-checking { background: #ffc107; }
-        .icon-safe { background: #28a745; }
-        .icon-warning { background: #ffc107; }
-        .icon-danger { background: #dc3545; }
-
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+        
+        .form-error.show {
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛡️ Location Security Detector arfi</h1>
-            <p>Deteksi lokasi palsu, mock location, dan developer options</p>
+            <h1>📍 Form Absensi Lokasi</h1>
+            <p>Isi data dan kunci lokasi Anda untuk absensi</p>
         </div>
 
-        <button class="btn" id="startDetection" onclick="startFullDetection()">
-            🔍 Mulai Deteksi Keamanan
-        </button>
+        <div id="alertContainer"></div>
 
-        <div class="detection-grid">
-            <div class="detection-card" id="gpsCard">
-                <div class="detection-title">
-                    <span class="status-icon" id="gpsIcon"></span>
-                    📍 Deteksi GPS & Lokasi
-                </div>
-                <div class="detection-status" id="gpsStatus">Menunggu deteksi...</div>
-                <div class="detection-details" id="gpsDetails"></div>
+        <form id="attendanceForm">
+            <div class="form-group">
+                <label for="name">Nama Lengkap *</label>
+                <input type="text" id="name" name="name" required placeholder="Masukkan nama lengkap">
+                <div class="form-error" id="nameError">Nama lengkap harus diisi</div>
             </div>
 
-            <div class="detection-card" id="mockCard">
-                <div class="detection-title">
-                    <span class="status-icon" id="mockIcon"></span>
-                    🎭 Mock Location Detection
-                </div>
-                <div class="detection-status" id="mockStatus">Menunggu deteksi...</div>
-                <div class="detection-details" id="mockDetails"></div>
+            <div class="form-group">
+                <label for="employeeId">NIP/ID Karyawan *</label>
+                <input type="text" id="employeeId" name="employeeId" required placeholder="Masukkan NIP/ID">
+                <div class="form-error" id="employeeIdError">NIP/ID harus diisi</div>
             </div>
 
-            <div class="detection-card" id="devCard">
-                <div class="detection-title">
-                    <span class="status-icon" id="devIcon"></span>
-                    ⚙️ Developer Options
-                </div>
-                <div class="detection-status" id="devStatus">Menunggu deteksi...</div>
-                <div class="detection-details" id="devDetails"></div>
+            <div class="form-group">
+                <label for="attendanceType">Jenis Absensi *</label>
+                <select id="attendanceType" name="attendanceType" required>
+                    <option value="">Pilih jenis absensi</option>
+                    <option value="masuk">Absen Masuk</option>
+                    <option value="keluar">Absen Keluar</option>
+                    <option value="istirahat">Istirahat</option>
+                </select>
+                <div class="form-error" id="attendanceTypeError">Jenis absensi harus dipilih</div>
             </div>
 
-            <div class="detection-card" id="browserCard">
-                <div class="detection-title">
-                    <span class="status-icon" id="browserIcon"></span>
-                    🌐 Browser Security
-                </div>
-                <div class="detection-status" id="browserStatus">Menunggu deteksi...</div>
-                <div class="detection-details" id="browserDetails"></div>
+            <div class="form-group">
+                <label for="notes">Catatan (Opsional)</label>
+                <textarea id="notes" name="notes" placeholder="Tambahkan catatan jika diperlukan"></textarea>
             </div>
-        </div>
 
-        <div class="location-info" id="locationInfo" style="display: none;">
-            <h3>📊 Informasi Lokasi</h3>
-            <div class="location-data" id="locationData"></div>
-        </div>
+            <div class="form-group">
+                <label>Lokasi Anda</label>
+                <div id="lockedIndicator" class="locked-indicator" style="display: none;">
+                    🔒 Lokasi Terkunci
+                </div>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn btn-primary" id="updateLocationBtn" onclick="updateLocation()">
+                    <span>🔄 Perbarui Lokasi</span>
+                </button>
+                <button type="button" class="btn btn-success" id="lockLocationBtn" onclick="lockLocation()" disabled>
+                    <span>🔒 Kunci Lokasi</span>
+                </button>
+            </div>
+
+            <div class="location-info">
+                <strong>📊 Informasi Lokasi</strong>
+                <div class="location-info-grid">
+                    <div class="info-item">
+                        <label>Latitude</label>
+                        <value id="latValue">-</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Longitude</label>
+                        <value id="lngValue">-</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Akurasi GPS</label>
+                        <value id="accuracyValue">-</value>
+                    </div>
+                    <div class="info-item">
+                        <label>Jarak dari Kantor</label>
+                        <value id="distanceValue">-</value>
+                    </div>
+                </div>
+                <div id="locationStatus"></div>
+            </div>
+
+            <div class="detection-results" id="detectionResults" style="display: none;">
+                <div class="detection-card" id="locationCard">
+                    <h4>📍 Validasi Lokasi</h4>
+                    <p id="locationCardText">-</p>
+                </div>
+                <div class="detection-card" id="mockCard">
+                    <h4>🎭 Deteksi Mock Location</h4>
+                    <p id="mockCardText">-</p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-submit" id="submitBtn" disabled>
+                <span>✅ Submit Absensi</span>
+            </button>
+        </form>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
+        const TARGET_LAT = -7.714939;
+        const TARGET_LNG = 110.355989;
+        const VALID_RADIUS = 10;
+
+        let map;
+        let userMarker;
+        let targetMarker;
+        let accuracyCircle;
+        let radiusCircle;
+        let isLocationLocked = false;
+        let currentLocation = null;
         let detectionResults = {
-            gps: null,
-            mock: null,
-            developer: null,
-            browser: null
+            location: null,
+            mock: null
         };
 
-        let previousLocations = [];
-        let locationHistory = [];
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([TARGET_LAT, TARGET_LNG], 18);
 
-        async function startFullDetection() {
-            const btn = document.getElementById('startDetection');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Marker untuk lokasi target (kantor)
+            const targetIcon = L.divIcon({
+                className: 'custom-target-icon',
+                html: '<div style="background: #dc3545; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            targetMarker = L.marker([TARGET_LAT, TARGET_LNG], {icon: targetIcon}).addTo(map);
+            targetMarker.bindPopup('<b>📍 Lokasi Absensi</b><br>Titik kantor').openPopup();
+
+            // Radius circle untuk area valid
+            radiusCircle = L.circle([TARGET_LAT, TARGET_LNG], {
+                color: '#28a745',
+                fillColor: '#28a745',
+                fillOpacity: 0.1,
+                radius: VALID_RADIUS
+            }).addTo(map);
+        }
+
+        async function updateLocation() {
+            if (isLocationLocked) {
+                showAlert('Lokasi sudah terkunci. Tidak dapat diperbarui.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('updateLocationBtn');
             btn.disabled = true;
-            btn.innerHTML = '<div class="spinner"></div> Mendeteksi...';
-
-            // Reset status
-            resetDetectionStatus();
+            btn.innerHTML = '<div class="spinner"></div> <span>Memperbarui...</span>';
 
             try {
-                // Jalankan semua deteksi secara paralel
                 await Promise.all([
-                    detectGPSLocation(),
-                    detectMockLocation(),
-                    detectDeveloperOptions(),
-                    detectBrowserSecurity()
+                    validateLocation(),
+                    detectMockLocation()
                 ]);
 
-                showFinalResults();
+                document.getElementById('detectionResults').style.display = 'grid';
+                
+                if (currentLocation && currentLocation.valid) {
+                    document.getElementById('lockLocationBtn').disabled = false;
+                }
             } catch (error) {
-                console.error('Error during detection:', error);
-                showAlert('Terjadi kesalahan saat melakukan deteksi', 'danger');
+                showAlert('Gagal memperbarui lokasi: ' + error.message, 'danger');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '🔍 Mulai Deteksi Ulang';
+                btn.innerHTML = '<span>🔄 Perbarui Lokasi</span>';
             }
         }
 
-        function resetDetectionStatus() {
-            const cards = ['gps', 'mock', 'dev', 'browser'];
-            cards.forEach(card => {
-                updateDetectionCard(card, 'checking', 'Sedang memeriksa...', '');
-            });
+        function lockLocation() {
+            if (!currentLocation || !currentLocation.valid) {
+                showAlert('Lokasi tidak valid. Tidak dapat dikunci.', 'danger');
+                return;
+            }
+
+            if (detectionResults.mock && detectionResults.mock.status === 'danger') {
+                showAlert('Mock location terdeteksi. Tidak dapat mengunci lokasi.', 'danger');
+                return;
+            }
+
+            isLocationLocked = true;
+            document.getElementById('lockedIndicator').style.display = 'block';
+            document.getElementById('updateLocationBtn').disabled = true;
+            document.getElementById('lockLocationBtn').disabled = true;
+            document.getElementById('lockLocationBtn').innerHTML = '<span>✅ Lokasi Terkunci</span>';
+            document.getElementById('submitBtn').disabled = false;
+
+            showAlert('✅ Lokasi berhasil dikunci! Anda dapat submit absensi sekarang.', 'success');
         }
 
-        async function detectGPSLocation() {
-            return new Promise((resolve) => {
+        async function validateLocation() {
+            return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
-                    detectionResults.gps = {
-                        status: 'danger',
-                        message: 'Geolocation tidak didukung browser',
-                        details: 'Browser ini tidak mendukung API Geolocation'
-                    };
-                    updateDetectionCard('gps', 'danger', detectionResults.gps.message, detectionResults.gps.details);
-                    resolve();
+                    showAlert('GPS tidak tersedia di browser ini', 'danger');
+                    reject(new Error('GPS tidak tersedia'));
                     return;
                 }
 
                 const options = {
                     enableHighAccuracy: true,
-                    timeout: 15000,
+                    timeout: 20000,
                     maximumAge: 0
                 };
 
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { coords } = position;
-                        const accuracy = coords.accuracy;
-                        
-                        // Analisis akurasi untuk mendeteksi kemungkinan lokasi palsu
-                        let suspicionLevel = 'safe';
-                        let message = 'Lokasi GPS terdeteksi normal';
-                        let details = `Akurasi: ${accuracy.toFixed(2)}m`;
+                let locationAttempts = [];
+                let attemptCount = 0;
+                const maxAttempts = 3;
 
-                        if (accuracy > 1000) {
-                            suspicionLevel = 'warning';
-                            message = 'Akurasi GPS rendah - mungkin indoor';
-                            details += ' (Akurasi sangat rendah)';
-                        } else if (accuracy < 5) {
-                            suspicionLevel = 'warning';
-                            message = 'Akurasi GPS terlalu tinggi - mencurigakan';
-                            details += ' (Akurasi terlalu sempurna)';
-                        }
+                function attemptGetLocation() {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const { coords } = position;
+                            locationAttempts.push({
+                                lat: coords.latitude,
+                                lng: coords.longitude,
+                                accuracy: coords.accuracy,
+                                timestamp: Date.now()
+                            });
 
-                        // Cek konsistensi lokasi
-                        if (previousLocations.length > 0) {
-                            const lastLocation = previousLocations[previousLocations.length - 1];
-                            const distance = calculateDistance(
-                                coords.latitude, coords.longitude,
-                                lastLocation.lat, lastLocation.lng
-                            );
-                            
-                            if (distance > 100000) { // > 100km dalam waktu singkat
-                                suspicionLevel = 'danger';
-                                message = 'Perpindahan lokasi tidak wajar';
-                                details += ` | Jarak dari lokasi sebelumnya: ${(distance/1000).toFixed(2)}km`;
+                            attemptCount++;
+
+                            if (attemptCount >= maxAttempts || coords.accuracy <= 15) {
+                                processLocationData();
+                            } else {
+                                setTimeout(attemptGetLocation, 1000);
                             }
+                        },
+                        (error) => {
+                            if (locationAttempts.length > 0) {
+                                processLocationData();
+                            } else {
+                                handleLocationError(error);
+                                reject(error);
+                            }
+                        },
+                        options
+                    );
+                }
+
+                function processLocationData() {
+                    const bestLocation = locationAttempts.reduce((best, current) => {
+                        return current.accuracy < best.accuracy ? current : best;
+                    });
+
+                    let finalLat = bestLocation.lat;
+                    let finalLng = bestLocation.lng;
+                    let finalAccuracy = bestLocation.accuracy;
+
+                    if (locationAttempts.length >= 2) {
+                        const goodReadings = locationAttempts.filter(loc => loc.accuracy < 50);
+                        
+                        if (goodReadings.length >= 2) {
+                            finalLat = goodReadings.reduce((sum, loc) => sum + loc.lat, 0) / goodReadings.length;
+                            finalLng = goodReadings.reduce((sum, loc) => sum + loc.lng, 0) / goodReadings.length;
+                            finalAccuracy = goodReadings.reduce((sum, loc) => sum + loc.accuracy, 0) / goodReadings.length;
                         }
+                    }
 
-                        previousLocations.push({
-                            lat: coords.latitude,
-                            lng: coords.longitude,
-                            timestamp: Date.now(),
-                            accuracy: accuracy
-                        });
+                    const distance = calculateDistance(
+                        TARGET_LAT, TARGET_LNG,
+                        finalLat, finalLng
+                    );
 
-                        locationHistory.push({
-                            timestamp: new Date().toLocaleString(),
-                            latitude: coords.latitude.toFixed(6),
-                            longitude: coords.longitude.toFixed(6),
-                            accuracy: accuracy.toFixed(2) + 'm',
-                            altitude: coords.altitude ? coords.altitude.toFixed(2) + 'm' : 'N/A',
-                            speed: coords.speed ? coords.speed.toFixed(2) + 'm/s' : 'N/A'
-                        });
+                    const effectiveRadius = VALID_RADIUS + (finalAccuracy * 0.5);
+                    const isValid = distance <= effectiveRadius;
+                    
+                    let status = isValid ? 'safe' : 'danger';
+                    let message = isValid 
+                        ? '✅ Dalam radius valid' 
+                        : '❌ Di luar radius valid';
 
-                        detectionResults.gps = {
-                            status: suspicionLevel,
-                            message: message,
-                            details: details,
-                            position: coords
-                        };
+                    if (finalAccuracy > 50 && finalAccuracy <= 100) {
+                        status = 'warning';
+                        message = '⚠️ Akurasi GPS rendah';
+                    } else if (finalAccuracy > 100) {
+                        status = 'danger';
+                        message = '❌ Akurasi GPS terlalu rendah';
+                    } else if (finalAccuracy < 3) {
+                        status = 'warning';
+                        message = '⚠️ Akurasi mencurigakan';
+                    }
 
-                        updateDetectionCard('gps', suspicionLevel, message, details);
-                        updateLocationInfo();
-                        resolve();
-                    },
-                    (error) => {
-                        let message = 'Gagal mendapatkan lokasi GPS';
-                        let details = '';
+                    currentLocation = {
+                        lat: finalLat,
+                        lng: finalLng,
+                        accuracy: finalAccuracy,
+                        distance: distance,
+                        valid: isValid && finalAccuracy <= 100 && finalAccuracy >= 3
+                    };
 
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                message = 'Izin lokasi ditolak';
-                                details = 'User menolak permintaan akses lokasi';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                message = 'Lokasi tidak tersedia';
-                                details = 'Informasi lokasi tidak dapat diperoleh';
-                                break;
-                            case error.TIMEOUT:
-                                message = 'Timeout mendapatkan lokasi';
-                                details = 'Permintaan lokasi melebihi batas waktu';
-                                break;
-                        }
+                    detectionResults.location = {
+                        status: status,
+                        message: message,
+                        valid: currentLocation.valid
+                    };
 
-                        detectionResults.gps = {
-                            status: 'danger',
-                            message: message,
-                            details: details
-                        };
+                    updateMapMarkers(finalLat, finalLng, finalAccuracy);
+                    updateLocationDisplay();
+                    updateDetectionCard('location', status, message);
+                    
+                    resolve();
+                }
 
-                        updateDetectionCard('gps', 'danger', message, details);
-                        resolve();
-                    },
-                    options
-                );
+                function handleLocationError(error) {
+                    let message = 'Gagal mendapatkan lokasi';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            message = 'Izin lokasi ditolak. Mohon izinkan akses lokasi.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            message = 'Lokasi tidak tersedia. Pastikan GPS aktif.';
+                            break;
+                        case error.TIMEOUT:
+                            message = 'Timeout GPS. Coba lagi.';
+                            break;
+                    }
+                    showAlert(message, 'danger');
+                    reject(error);
+                }
+
+                attemptGetLocation();
             });
         }
 
         async function detectMockLocation() {
             return new Promise((resolve) => {
                 let suspiciousFactors = [];
-                let mockProbability = 0;
+                let mockScore = 0;
 
-                // Test 1: Cek konsistensi waktu lokasi
                 if (navigator.geolocation) {
                     const startTime = Date.now();
                     
                     navigator.geolocation.getCurrentPosition(
                         (position1) => {
                             const time1 = Date.now();
+                            const responseTime1 = time1 - startTime;
                             
-                            // Minta lokasi lagi dengan interval singkat
+                            if (responseTime1 < 50) {
+                                suspiciousFactors.push('Respons terlalu cepat');
+                                mockScore += 30;
+                            }
+
                             setTimeout(() => {
                                 navigator.geolocation.getCurrentPosition(
                                     (position2) => {
-                                        const time2 = Date.now();
-                                        
-                                        // Analisis pola waktu respons
-                                        const responseTime1 = time1 - startTime;
-                                        const responseTime2 = time2 - (time1 + 100);
-                                        
-                                        if (responseTime1 < 50 || responseTime2 < 50) {
-                                            suspiciousFactors.push('Waktu respons GPS terlalu cepat');
-                                            mockProbability += 30;
-                                        }
-
-                                        // Cek apakah koordinat persis sama
                                         if (position1.coords.latitude === position2.coords.latitude &&
-                                            position1.coords.longitude === position2.coords.longitude) {
-                                            suspiciousFactors.push('Koordinat identik pada pembacaan berulang');
-                                            mockProbability += 25;
+                                            position1.coords.longitude === position2.coords.longitude &&
+                                            position1.coords.accuracy === position2.coords.accuracy) {
+                                            suspiciousFactors.push('Koordinat identik');
+                                            mockScore += 35;
                                         }
 
-                                        // Cek akurasi yang tidak realistis
                                         if (position1.coords.accuracy < 3) {
-                                            suspiciousFactors.push('Akurasi GPS terlalu tinggi');
-                                            mockProbability += 20;
+                                            suspiciousFactors.push('Akurasi tidak realistis');
+                                            mockScore += 25;
                                         }
 
                                         finalizeMockDetection();
@@ -470,382 +729,107 @@
                 }
 
                 function finalizeMockDetection() {
-                    // Test tambahan: Deteksi Developer Tools
-                    if (isDevToolsOpen()) {
-                        suspiciousFactors.push('Developer Tools terdeteksi terbuka');
-                        mockProbability += 15;
+                    // Deteksi virtual environment
+                    if (detectVirtualEnvironment()) {
+                        suspiciousFactors.push('Virtual environment');
+                        mockScore += 30;
                     }
 
-                    // Test: Deteksi virtual environment
-                    if (detectVirtualEnvironment()) {
-                        suspiciousFactors.push('Kemungkinan berjalan di virtual environment');
-                        mockProbability += 20;
+                    // Deteksi browser headless
+                    if (detectHeadlessBrowser()) {
+                        suspiciousFactors.push('Browser headless');
+                        mockScore += 25;
+                    }
+
+                    // Deteksi API geolocation yang dimodifikasi
+                    if (isGeolocationTampered()) {
+                        suspiciousFactors.push('API dimodifikasi');
+                        mockScore += 40;
                     }
 
                     let status = 'safe';
-                    let message = 'Tidak terdeteksi mock location';
-                    let details = 'Lokasi tampak authentic';
+                    let message = '✅ Tidak terdeteksi mock';
 
-                    if (mockProbability >= 70) {
+                    if (mockScore >= 70) {
                         status = 'danger';
-                        message = 'Mock location sangat mungkin aktif';
-                        details = suspiciousFactors.join(' | ');
-                    } else if (mockProbability >= 40) {
+                        message = '❌ Mock location terdeteksi';
+                    } else if (mockScore >= 40) {
                         status = 'warning';
-                        message = 'Kemungkinan mock location terdeteksi';
-                        details = suspiciousFactors.length > 0 ? suspiciousFactors.join(' | ') : 'Beberapa indikator mencurigakan';
+                        message = '⚠️ Kemungkinan mock';
                     }
 
                     detectionResults.mock = {
                         status: status,
                         message: message,
-                        details: details + ` (Skor: ${mockProbability}%)`
+                        score: mockScore,
+                        factors: suspiciousFactors
                     };
 
-                    updateDetectionCard('mock', status, message, detectionResults.mock.details);
+                    updateDetectionCard('mock', status, message);
                     resolve();
                 }
             });
         }
-function detectDevTools() {
-    let devToolsOpen = false;
-    let method = 'Unknown';
 
-    try {
-        // Method 1: Checking for a specific size change that occurs when DevTools opens
-        const outerWidth = window.outerWidth;
-        const innerWidth = window.innerWidth;
-        if (outerWidth - innerWidth > 150) {
-            devToolsOpen = true;
-            method = 'Size difference';
-        }
-    } catch (e) {}
+        function updateMapMarkers(lat, lng, accuracy) {
+            // Remove old markers
+            if (userMarker) map.removeLayer(userMarker);
+            if (accuracyCircle) map.removeLayer(accuracyCircle);
 
-    try {
-        // Method 2: Inspecting element.id or other properties
-        const element = new Image();
-        Object.defineProperty(element, 'id', {
-            get: () => {
-                devToolsOpen = true;
-                method = 'ID getter';
-            }
-        });
-        console.log(element);
-    } catch (e) {}
-
-    try {
-        // Method 3: Using a debugger statement
-        const before = Date.now();
-        debugger;
-        const after = Date.now();
-        if (after - before > 100) { // Paused by debugger
-            devToolsOpen = true;
-            method = 'Debugger timing';
-        }
-    } catch (e) {}
-
-    return { isOpen: devToolsOpen, method: method };
-}
-        function detectDeveloperOptions() {
-            return new Promise((resolve) => {
-                let devIndicators = [];
-                let devScore = 0;
-                let webLimitations = [];
-
-                // KETERBATASAN: Web browser tidak bisa mendeteksi Android Developer Options secara langsung
-                webLimitations.push('Browser tidak dapat mengakses Android Developer Options');
-
-                // Test 1: Deteksi DevTools (akurat untuk web)
-                const devToolsResult = detectDevTools();
-                if (devToolsResult.isOpen) {
-                    devIndicators.push(`Developer Tools: ${devToolsResult.method}`);
-                    devScore += 35;
-                }
-
-                // Test 2: Deteksi debugging environment
-                if (isDebuggingEnvironment()) {
-                    devIndicators.push('Environment debugging terdeteksi');
-                    devScore += 25;
-                }
-
-                // Test 3: Deteksi automation/testing tools
-                const automationResult = detectAutomationTools();
-                if (automationResult.detected) {
-                    devIndicators.push(`Automation tools: ${automationResult.tools.join(', ')}`);
-                    devScore += 40;
-                }
-function detectAutomationTools() {
-    const userAgent = navigator.userAgent;
-    const tools = [];
-    if (navigator.webdriver) {
-        tools.push('Webdriver');
-    }
-    if (userAgent.includes('HeadlessChrome')) {
-        tools.push('Headless Chrome');
-    }
-    if (userAgent.includes('PhantomJS')) {
-        tools.push('PhantomJS');
-    }
-    return { detected: tools.length > 0, tools: tools };
-}
-
-
-function detectEmulatorSignature() {
-    let reasons = [];
-    // Check for common emulator User-Agent strings
-    const userAgent = navigator.userAgent;
-    if (userAgent.includes('Android') && !userAgent.includes('Mobile')) {
-        reasons.push('User-Agent is Android but not Mobile');
-    }
-    // Check for specific hardware/device-related properties
-    if (navigator.platform === 'Linux armv7l' && !navigator.hardwareConcurrency) {
-        reasons.push('Linux ARM without hardware concurrency');
-    }
-    return { suspected: reasons.length > 0, reasons: reasons };
-}
-function isConsoleOrAPITampered() {
-    return isConsoleTampered() || isGeolocationTampered();
-}
-
-function isConsoleTampered() {
-    try {
-        return typeof console.log !== 'function' ||
-               console.log.toString().indexOf('native code') === -1;
-    } catch (e) {
-        return true;
-    }
-}
-
-function hasPerformanceAnomalies() {
-    if (!performance || !performance.now) return false;
-    const t0 = performance.now();
-    for (let i = 0; i < 1e5; i++); // A busy loop
-    const t1 = performance.now();
-    return (t1 - t0) > 100; // Unusually long delay
-}
-
-function hasMixedContent() {
-  const scripts = document.querySelectorAll('script[src]');
-  const links = document.querySelectorAll('link[href]');
-  
-  for (let script of scripts) {
-    if (script.src && script.src.startsWith('http://')) return true;
-  }
-  for (let link of links) {
-    if (link.href && link.href.startsWith('http://')) return true;
-  }
-  return false;
-}
-
-function isBrowserIntegrityGood() {
-  return typeof window.navigator !== 'undefined' &&
-     typeof window.location !== 'undefined' &&
-     typeof window.document !== 'undefined';
-}
-
-                // Test 4: Deteksi emulator/virtual device (terbatas)
-                const emulatorResult = detectEmulatorSignature();
-                if (emulatorResult.suspected) {
-                    devIndicators.push(`Kemungkinan emulator: ${emulatorResult.reasons.join(', ')}`);
-                    devScore += 30;
-                }
-
-                // Test 5: Console/API manipulation check
-                if (isConsoleOrAPITampered()) {
-                    devIndicators.push('Browser API dimodifikasi');
-                    devScore += 20;
-                }
-
-                // Test 6: Performance timing anomalies (bisa indikasi debugging)
-                if (hasPerformanceAnomalies()) {
-                    devIndicators.push('Anomali performa terdeteksi');
-                    devScore += 15;
-                }
-
-                let status = 'warning'; // Default warning karena keterbatasan web
-                let message = 'Deteksi terbatas - gunakan aplikasi native untuk akurasi penuh';
-                let details = webLimitations.join(' | ');
-
-                if (devScore >= 50) {
-                    status = 'danger';
-                    message = 'Development environment terdeteksi';
-                    details = devIndicators.join(' | ');
-                } else if (devScore >= 20) {
-                    status = 'warning';
-                    message = 'Beberapa indikator development terdeteksi';
-                    details = devIndicators.length > 0 ? devIndicators.join(' | ') : 'Deteksi terbatas di web browser';
-                } else if (devIndicators.length === 0) {
-                    status = 'warning';
-                    message = 'Tidak dapat mendeteksi Android Developer Options';
-                    details = 'Web browser memiliki keterbatasan akses ke pengaturan sistem';
-                }
-
-                detectionResults.developer = {
-                    status: status,
-                    message: message,
-                    details: details + (devScore > 0 ? ` (Skor: ${devScore}%)` : ''),
-                    limitations: webLimitations
-                };
-
-                updateDetectionCard('dev', status, message, detectionResults.developer.details);
-                resolve();
+            // Add user marker
+            const userIcon = L.divIcon({
+                className: 'custom-user-icon',
+                html: '<div style="background: #667eea; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
             });
-        }
-function isDebuggingEnvironment() {
-    return isDebuggerPresent();
-}
 
-function isDebuggerPresent() {
-    const originalError = Error;
-    let result = false;
-    Error = function() {
-        result = true;
-    };
-    try {
-        // Attempt to trigger an error in a controlled way
-        // If a debugger is attached, it might pause here
-        // and change the execution flow.
-        const start = Date.now();
-        debugger;
-        const end = Date.now();
-        if (end - start > 100) {
-            return true;
-        }
-    } catch(e) {
-        return false;
-    } finally {
-        Error = originalError;
-    }
-    return result;
-}
-        function detectBrowserSecurity() {
-            return new Promise((resolve) => {
-                let securityIssues = [];
-                let securityScore = 100;
+            userMarker = L.marker([lat, lng], {icon: userIcon}).addTo(map);
+            userMarker.bindPopup('<b>📱 Lokasi Anda</b>').openPopup();
 
-                // Test 1: HTTPS Check
-                if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                    securityIssues.push('Tidak menggunakan HTTPS');
-                    securityScore -= 30;
-                }
+            // Add accuracy circle
+            accuracyCircle = L.circle([lat, lng], {
+                color: '#667eea',
+                fillColor: '#667eea',
+                fillOpacity: 0.1,
+                radius: accuracy
+            }).addTo(map);
 
-                // Test 2: Mixed Content
-                if (hasMixedContent()) {
-                    securityIssues.push('Mixed content terdeteksi');
-                    securityScore -= 20;
-                }
-
-                // Test 3: Browser Integrity
-                if (!isBrowserIntegrityGood()) {
-                    securityIssues.push('Integritas browser mencurigakan');
-                    securityScore -= 25;
-                }
-
-                // Test 4: Geolocation API tampering
-                if (isGeolocationTampered()) {
-                    securityIssues.push('Geolocation API mungkin dimodifikasi');
-                    securityScore -= 40;
-                }
-
-                let status = 'safe';
-                let message = 'Browser security normal';
-                let details = 'Tidak ada masalah keamanan terdeteksi';
-
-                if (securityScore < 50) {
-                    status = 'danger';
-                    message = 'Masalah keamanan serius terdeteksi';
-                    details = securityIssues.join(' | ');
-                } else if (securityScore < 80) {
-                    status = 'warning';
-                    message = 'Beberapa masalah keamanan ringan';
-                    details = securityIssues.length > 0 ? securityIssues.join(' | ') : 'Keamanan bisa ditingkatkan';
-                }
-
-                detectionResults.browser = {
-                    status: status,
-                    message: message,
-                    details: details + ` (Skor: ${securityScore}%)`
-                };
-
-                updateDetectionCard('browser', status, message, detectionResults.browser.details);
-                resolve();
-            });
+            // Fit bounds to show both markers
+            const bounds = L.latLngBounds([
+                [TARGET_LAT, TARGET_LNG],
+                [lat, lng]
+            ]);
+            map.fitBounds(bounds, { padding: [50, 50] });
         }
 
-        // Helper Functions
-        function isDevToolsOpen() {
-            const threshold = 160;
-            return window.outerHeight - window.innerHeight > threshold ||
-                   window.outerWidth - window.innerWidth > threshold;
-        }
+        function updateLocationDisplay() {
+            if (!currentLocation) return;
 
-        function isDebuggerPresent() {
-            try {
-                const start = new Date().getTime();
-                debugger;
-                const end = new Date().getTime();
-                return end - start > 100;
-            } catch (e) {
-                return false;
+            document.getElementById('latValue').textContent = currentLocation.lat.toFixed(6);
+            document.getElementById('lngValue').textContent = currentLocation.lng.toFixed(6);
+            document.getElementById('accuracyValue').textContent = currentLocation.accuracy.toFixed(2) + ' m';
+            document.getElementById('distanceValue').textContent = currentLocation.distance.toFixed(2) + ' m';
+
+            let statusHTML = '';
+            if (currentLocation.valid) {
+                statusHTML = '<span class="status-badge status-success">✅ Lokasi Valid</span>';
+            } else {
+                statusHTML = '<span class="status-badge status-danger">❌ Lokasi Tidak Valid</span>';
             }
+            document.getElementById('locationStatus').innerHTML = statusHTML;
         }
 
-        function isConsoleTampered() {
-            return typeof console.log !== 'function' || 
-                   console.log.toString().indexOf('native code') === -1;
-        }
-
-        function isMobileDeveloperMode() {
-            const ua = navigator.userAgent;
-            // Deteksi emulator atau debugging mode
-            return /Android.*Debug|iPhone.*Debug/i.test(ua) ||
-                   window.DeviceMotionEvent === undefined && /Mobile/i.test(ua);
-        }
-
-        function hasSuspiciousExtensions() {
-            // Cek extension yang umum digunakan untuk spoofing
-            return document.querySelectorAll('*[data-extension]').length > 0 ||
-                   window.chrome && Object.keys(window.chrome).length > 5;
-        }
-
-        function detectVirtualEnvironment() {
-            const ua = navigator.userAgent;
-            return /HeadlessChrome|PhantomJS|Selenium|WebDriver/i.test(ua);
-        }
-
-        function hasMixedContent() {
-            const scripts = document.querySelectorAll('script[src]');
-            const links = document.querySelectorAll('link[href]');
+        function updateDetectionCard(type, status, message) {
+            const card = document.getElementById(type + 'Card');
+            const text = document.getElementById(type + 'CardText');
             
-            for (let script of scripts) {
-                if (script.src && script.src.startsWith('http://')) return true;
-            }
-            for (let link of links) {
-                if (link.href && link.href.startsWith('http://')) return true;
-            }
-            return false;
-        }
-
-        function isBrowserIntegrityGood() {
-            return typeof window.navigator !== 'undefined' &&
-                   typeof window.location !== 'undefined' &&
-                   typeof window.document !== 'undefined';
-        }
-
-        function isGeolocationTampered() {
-            if (!navigator.geolocation) return false;
-            
-            const originalToString = Function.prototype.toString;
-            try {
-                const geolocationString = navigator.geolocation.getCurrentPosition.toString();
-                return !geolocationString.includes('[native code]');
-            } catch (e) {
-                return true;
-            }
+            card.className = `detection-card ${status}`;
+            text.textContent = message;
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // Earth's radius in meters
+            const R = 6371e3;
             const φ1 = lat1 * Math.PI/180;
             const φ2 = lat2 * Math.PI/180;
             const Δφ = (lat2-lat1) * Math.PI/180;
@@ -859,74 +843,172 @@ function isDebuggerPresent() {
             return R * c;
         }
 
-        function updateDetectionCard(cardType, status, message, details) {
-            const card = document.getElementById(`${cardType}Card`);
-            const icon = document.getElementById(`${cardType}Icon`);
-            const statusEl = document.getElementById(`${cardType}Status`);
-            const detailsEl = document.getElementById(`${cardType}Details`);
-
-            card.className = `detection-card ${status}`;
-            icon.className = `status-icon icon-${status}`;
-            statusEl.textContent = message;
-            detailsEl.textContent = details;
-        }
-
-        function updateLocationInfo() {
-            const locationInfo = document.getElementById('locationInfo');
-            const locationData = document.getElementById('locationData');
+        function detectVirtualEnvironment() {
+            // Deteksi environment virtual seperti emulator
+            const features = [
+                'webdriver',
+                'phantom',
+                '__nightmare',
+                '_phantom',
+                'callPhantom'
+            ];
             
-            if (locationHistory.length > 0) {
-                const latest = locationHistory[locationHistory.length - 1];
-                locationData.innerHTML = `
-                    <div><strong>Waktu:</strong> ${latest.timestamp}</div>
-                    <div><strong>Latitude:</strong> ${latest.latitude}</div>
-                    <div><strong>Longitude:</strong> ${latest.longitude}</div>
-                    <div><strong>Akurasi:</strong> ${latest.accuracy}</div>
-                    <div><strong>Ketinggian:</strong> ${latest.altitude}</div>
-                    <div><strong>Kecepatan:</strong> ${latest.speed}</div>
-                `;
-                locationInfo.style.display = 'block';
+            for (let feature of features) {
+                if (feature in window) return true;
             }
+            
+            return false;
         }
 
-        function showFinalResults() {
-            const results = Object.values(detectionResults);
-            const dangerCount = results.filter(r => r && r.status === 'danger').length;
-            const warningCount = results.filter(r => r && r.status === 'warning').length;
-
-            let alertClass = 'alert-success';
-            let alertMessage = '✅ Semua pemeriksaan keamanan lolos. Lokasi tampak authentic.';
-
-            if (dangerCount > 0) {
-                alertClass = 'alert-danger';
-                alertMessage = `⚠️ ${dangerCount} masalah serius terdeteksi! Lokasi mungkin tidak authentic.`;
-            } else if (warningCount > 0) {
-                alertClass = 'alert-warning';
-                alertMessage = `⚡ ${warningCount} indikator mencurigakan terdeteksi. Perlu investigasi lebih lanjut.`;
+        function detectHeadlessBrowser() {
+            // Deteksi browser headless
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            // Chrome headless
+            if (userAgent.includes('headless')) return true;
+            
+            // PhantomJS
+            if (userAgent.includes('phantomjs')) return true;
+            
+            // Puppeteer
+            if (userAgent.includes('puppeteer')) return true;
+            
+            // Check for missing plugins
+            if (navigator.plugins.length === 0) return true;
+            
+            // Check for missing languages
+            if (navigator.languages.length === 0) return true;
+            
+            // Check for missing webgl
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            if (!gl) return true;
+            
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+                const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                if (renderer.includes('SwiftShader')) return true;
             }
+            
+            return false;
+        }
 
-            showAlert(alertMessage, alertClass.replace('alert-', ''));
+        function isGeolocationTampered() {
+            if (!navigator.geolocation) return false;
+            
+            try {
+                const geolocationString = navigator.geolocation.getCurrentPosition.toString();
+                return !geolocationString.includes('[native code]');
+            } catch (e) {
+                return true;
+            }
         }
 
         function showAlert(message, type) {
-            const existingAlert = document.querySelector('.alert');
-            if (existingAlert) {
-                existingAlert.remove();
-            }
-
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-
-            const container = document.querySelector('.container');
-            container.insertBefore(alert, container.children[2]);
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${type} show">${message}</div>`;
+            
+            setTimeout(() => {
+                const alert = container.querySelector('.alert');
+                if (alert) alert.classList.remove('show');
+            }, 5000);
         }
 
-        // Auto-start detection when page loads
-        window.addEventListener('load', () => {
-            setTimeout(startFullDetection, 1000);
+        // Form validation
+        function validateForm() {
+            let isValid = true;
+            
+            // Validate name
+            const name = document.getElementById('name').value.trim();
+            if (!name) {
+                document.getElementById('nameError').classList.add('show');
+                isValid = false;
+            } else {
+                document.getElementById('nameError').classList.remove('show');
+            }
+            
+            // Validate employee ID
+            const employeeId = document.getElementById('employeeId').value.trim();
+            if (!employeeId) {
+                document.getElementById('employeeIdError').classList.add('show');
+                isValid = false;
+            } else {
+                document.getElementById('employeeIdError').classList.remove('show');
+            }
+            
+            // Validate attendance type
+            const attendanceType = document.getElementById('attendanceType').value;
+            if (!attendanceType) {
+                document.getElementById('attendanceTypeError').classList.add('show');
+                isValid = false;
+            } else {
+                document.getElementById('attendanceTypeError').classList.remove('show');
+            }
+            
+            return isValid;
+        }
+
+        document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validate form fields
+            if (!validateForm()) {
+                showAlert('Mohon lengkapi semua field yang wajib diisi!', 'warning');
+                return;
+            }
+
+            if (!isLocationLocked) {
+                showAlert('Mohon kunci lokasi terlebih dahulu!', 'warning');
+                return;
+            }
+
+            const formData = {
+                name: document.getElementById('name').value,
+                employeeId: document.getElementById('employeeId').value,
+                attendanceType: document.getElementById('attendanceType').value,
+                notes: document.getElementById('notes').value,
+                location: currentLocation,
+                detectionResults: detectionResults,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Form Data:', formData);
+            showAlert('✅ Absensi berhasil disubmit!', 'success');
+            
+            // Reset form after 2 seconds
+            setTimeout(() => {
+                this.reset();
+                isLocationLocked = false;
+                currentLocation = null;
+                document.getElementById('lockedIndicator').style.display = 'none';
+                document.getElementById('updateLocationBtn').disabled = false;
+                document.getElementById('lockLocationBtn').disabled = true;
+                document.getElementById('lockLocationBtn').innerHTML = '<span>🔒 Kunci Lokasi</span>';
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('detectionResults').style.display = 'none';
+                
+                // Reset location display
+                document.getElementById('latValue').textContent = '-';
+                document.getElementById('lngValue').textContent = '-';
+                document.getElementById('accuracyValue').textContent = '-';
+                document.getElementById('distanceValue').textContent = '-';
+                document.getElementById('locationStatus').innerHTML = '';
+                
+                // Reset error messages
+                document.querySelectorAll('.form-error').forEach(el => {
+                    el.classList.remove('show');
+                });
+                
+                if (userMarker) map.removeLayer(userMarker);
+                if (accuracyCircle) map.removeLayer(accuracyCircle);
+                map.setView([TARGET_LAT, TARGET_LNG], 18);
+            }, 2000);
         });
 
+        // Initialize map on page load
+        window.addEventListener('load', () => {
+            initMap();
+        });
     </script>
 </body>
 </html>
